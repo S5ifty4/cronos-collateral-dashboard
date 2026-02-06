@@ -6,22 +6,22 @@ import { useAccount } from 'wagmi';
 import type { ScenarioResult, CollateralPosition, BorrowPosition, ProtocolSnapshot, UnifiedPortfolio } from '@cronos-dash/shared';
 import { calculateRiskMetrics } from '@cronos-dash/shared';
 import type { SimulationData } from './ScenarioSimulator';
-import { fetchPortfolio } from '@/lib/api';
+import { fetchPortfolio, fetchPrices } from '@/lib/api';
 import { KPICards } from './KPICards';
 import { PositionTables } from './PositionTables';
 import { ScenarioSimulator } from './ScenarioSimulator';
 import { TargetHFHelper } from './TargetHFHelper';
 
-// Mock data for demo mode
-const DEMO_PRICES: Record<string, number> = {
-  CRO: 0.15,
+// Fallback prices for demo mode (used if API fails)
+const FALLBACK_PRICES: Record<string, number> = {
+  CRO: 0.09,
   USDC: 1.0,
-  ETH: 2500,
-  WBTC: 43000,
+  ETH: 3200,
+  WBTC: 98000,
 };
 
-function createDemoPortfolio(): UnifiedPortfolio {
-  const croPrice = DEMO_PRICES.CRO;
+function createDemoPortfolio(prices: Record<string, number>): UnifiedPortfolio {
+  const croPrice = prices.CRO || FALLBACK_PRICES.CRO;
   const croAmount = 500000; // 500,000 CRO supplied
   const croValueUsd = croAmount * croPrice;
   const usdcBorrowed = 21500; // $21,500 USDC borrowed
@@ -50,7 +50,7 @@ function createDemoPortfolio(): UnifiedPortfolio {
     weightedCollateralUsd: collaterals.reduce((sum, c) => sum + c.valueUsd * c.liquidationThreshold, 0),
   };
 
-  const risk = calculateRiskMetrics(collaterals, borrows, DEMO_PRICES);
+  const risk = calculateRiskMetrics(collaterals, borrows, prices);
 
   const snapshot: ProtocolSnapshot = {
     protocol: 'tectonic',
@@ -69,7 +69,7 @@ function createDemoPortfolio(): UnifiedPortfolio {
       totalWeightedCollateralUsd: totals.weightedCollateralUsd,
       healthFactor: risk.healthFactor,
     },
-    prices: DEMO_PRICES,
+    prices,
     timestamp: Date.now(),
   };
 }
@@ -98,8 +98,17 @@ export function Dashboard() {
     refetchInterval: 30000,
   });
 
+  // Fetch live prices for demo mode
+  const { data: livePrices, isLoading: pricesLoading } = useQuery({
+    queryKey: ['prices'],
+    queryFn: fetchPrices,
+    enabled: demoMode && mounted,
+    refetchInterval: 60000, // Refresh every minute
+  });
+
   // Use demo portfolio when in demo mode
-  const demoPortfolio = demoMode ? createDemoPortfolio() : null;
+  const demoPrices = livePrices || FALLBACK_PRICES;
+  const demoPortfolio = demoMode ? createDemoPortfolio(demoPrices) : null;
   const activePortfolio = demoMode ? demoPortfolio : portfolio;
 
   // Show loading placeholder during SSR to avoid hydration mismatch
@@ -151,7 +160,7 @@ export function Dashboard() {
     );
   }
 
-  if (isLoading && !demoMode) {
+  if ((isLoading && !demoMode) || (demoMode && pricesLoading)) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="animate-spin w-8 h-8 border-4 border-cro-cyan border-t-transparent rounded-full" />

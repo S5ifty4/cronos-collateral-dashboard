@@ -6,6 +6,14 @@ import { fetchTectonicPortfolio, fetchPrices } from '../adapters/tectonic.js';
 const addressSchema = z.string().regex(/^0x[a-fA-F0-9]{40}$/);
 
 export const portfolioRoutes: FastifyPluginAsync = async (fastify) => {
+  // Prices endpoint for demo mode
+  fastify.get('/prices', {
+    handler: async () => {
+      const prices = await fetchPrices();
+      return { prices, timestamp: Date.now() };
+    },
+  });
+
   fastify.get<{
     Querystring: { address: string };
   }>('/portfolio', {

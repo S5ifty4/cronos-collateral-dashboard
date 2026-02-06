@@ -8,6 +8,15 @@ import type {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
+export async function fetchPrices(): Promise<Record<string, number>> {
+  const res = await fetch(`${API_BASE}/api/prices`);
+  if (!res.ok) {
+    throw new Error('Failed to fetch prices');
+  }
+  const data = await res.json();
+  return data.prices;
+}
+
 export async function fetchPortfolio(address: string): Promise<UnifiedPortfolio> {
   const res = await fetch(`${API_BASE}/api/portfolio?address=${address}`);
   if (!res.ok) {
