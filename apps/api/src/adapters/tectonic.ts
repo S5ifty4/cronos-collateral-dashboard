@@ -142,6 +142,14 @@ const TTOKEN_MAP: Record<string, { symbol: string; underlyingDecimals: number }>
 // Native CRO handling - tCRO doesn't have underlying() as CRO is native
 const NATIVE_TTOKEN = TECTONIC_ADDRESSES.tCRO.toLowerCase();
 
+// Liquidation thresholds (collateral factors) for Tectonic
+const LIQUIDATION_THRESHOLDS: Record<string, number> = {
+  CRO: 0.75,
+  USDC: 0.85,
+  ETH: 0.80,
+  WBTC: 0.75,
+};
+
 interface TectonicAdapterOptions {
   useMockData?: boolean;
 }
@@ -431,7 +439,7 @@ export async function fetchPrices(): Promise<Record<string, number>> {
       return priceCache || FALLBACK_PRICES;
     }
 
-    const data = await response.json();
+    const data = await response.json() as Record<string, { usd?: number }>;
 
     // Map CoinGecko response to our symbol format
     const prices: Record<string, number> = {};
