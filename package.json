@@ -11,6 +11,7 @@
     "dev:web": "npm run dev -w @cronos-dash/web",
     "build": "npm run build -w @cronos-dash/shared && npm run build -w @cronos-dash/api && npm run build -w @cronos-dash/web",
     "build:shared": "npm run build -w @cronos-dash/shared",
+    "build:vercel": "npm run build -w @cronos-dash/shared && npm run build -w @cronos-dash/web",
     "typecheck": "npm run typecheck --workspaces --if-present"
   },
   "devDependencies": {
