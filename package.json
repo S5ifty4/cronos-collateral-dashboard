@@ -1,0 +1,22 @@
+{
+  "name": "cronos-collateral-dashboard",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev:api & npm run dev:web",
+    "dev:api": "npm run dev -w @cronos-dash/api",
+    "dev:web": "npm run dev -w @cronos-dash/web",
+    "build": "npm run build -w @cronos-dash/shared && npm run build -w @cronos-dash/api && npm run build -w @cronos-dash/web",
+    "build:shared": "npm run build -w @cronos-dash/shared",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

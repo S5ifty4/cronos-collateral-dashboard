@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --cro-bg: #050B15;
+  --cro-card: #0D1829;
+  --cro-border: #1E3A5F;
+  --cro-text: #F1F5F9;
+  --cro-muted: #94A3B8;
+  --cro-cyan: #00D4FF;
+  --cro-navy: #002D74;
+}
+
+body {
+  color: var(--cro-text);
+  background: var(--cro-bg);
+  min-height: 100vh;
+}
+
+/* Gradient glow effect */
+.cro-glow {
+  background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 45, 116, 0.4) 0%, transparent 70%);
+}
+
+/* Custom scrollbar - dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0D1829;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1E3A5F;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2E4A6F;
+}
+
+/* Number input spinner styling for dark theme */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+
+/* Range slider styling - Chrome/Safari/Edge */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  background: #1E3A5F;
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 8px;
+  background: #1E3A5F;
+  border-radius: 4px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, #00D4FF 0%, #002D74 100%);
+  border-radius: 50%;
+  cursor: pointer;
+  margin-top: -6px;
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.4);
+  border: 2px solid #00D4FF;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
+  transform: scale(1.1);
+}
+
+/* Range slider styling - Firefox */
+input[type="range"]::-moz-range-track {
+  width: 100%;
+  height: 8px;
+  background: #1E3A5F;
+  border-radius: 4px;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, #00D4FF 0%, #002D74 100%);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid #00D4FF;
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.4);
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
+}
