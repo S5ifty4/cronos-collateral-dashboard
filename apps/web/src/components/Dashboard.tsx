@@ -247,40 +247,40 @@ export function Dashboard() {
     <div className="space-y-6">
       {/* Demo Mode Banner */}
       {demoMode && (
-        <div className="bg-cro-cyan/10 border border-cro-cyan rounded-lg p-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-cro-cyan/20 flex items-center justify-center">
-                <svg className="w-4 h-4 text-cro-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="bg-cro-cyan/10 border border-cro-cyan rounded-lg p-3 sm:p-4">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-cro-cyan/20 flex items-center justify-center">
+                <svg className="w-3 h-3 sm:w-4 sm:h-4 text-cro-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <p className="text-cro-cyan font-medium">Demo Mode</p>
+              <p className="text-cro-cyan font-medium text-sm sm:text-base">Demo Mode</p>
             </div>
             <button
               onClick={() => setDemoMode(false)}
-              className="px-4 py-2 text-sm text-cro-cyan hover:bg-cro-cyan/10 rounded-lg transition-colors"
+              className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm text-cro-cyan hover:bg-cro-cyan/10 rounded-lg transition-colors"
             >
               Exit Demo
             </button>
           </div>
-          <div className="flex flex-wrap gap-4">
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-cro-muted">CRO Collateral:</label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div className="flex items-center justify-between sm:justify-start gap-2">
+              <label className="text-xs sm:text-sm text-cro-muted whitespace-nowrap">CRO Collateral:</label>
               <input
                 type="number"
                 value={demoCollateral}
                 onChange={(e) => setDemoCollateral(Math.max(0, Number(e.target.value)))}
-                className="w-32 px-3 py-1.5 text-sm font-mono bg-cro-dark border border-cro-border rounded-lg text-cro-text focus:outline-none focus:ring-1 focus:ring-cro-cyan"
+                className="w-28 sm:w-32 px-2 sm:px-3 py-1.5 text-sm font-mono bg-cro-dark border border-cro-border rounded-lg text-cro-text focus:outline-none focus:ring-1 focus:ring-cro-cyan"
               />
             </div>
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-cro-muted">USDC Borrowed:</label>
+            <div className="flex items-center justify-between sm:justify-start gap-2">
+              <label className="text-xs sm:text-sm text-cro-muted whitespace-nowrap">USDC Borrowed:</label>
               <input
                 type="number"
                 value={demoBorrowed}
                 onChange={(e) => setDemoBorrowed(Math.max(0, Number(e.target.value)))}
-                className="w-32 px-3 py-1.5 text-sm font-mono bg-cro-dark border border-cro-border rounded-lg text-cro-text focus:outline-none focus:ring-1 focus:ring-cro-cyan"
+                className="w-28 sm:w-32 px-2 sm:px-3 py-1.5 text-sm font-mono bg-cro-dark border border-cro-border rounded-lg text-cro-text focus:outline-none focus:ring-1 focus:ring-cro-cyan"
               />
             </div>
           </div>

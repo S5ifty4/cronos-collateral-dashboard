@@ -52,51 +52,51 @@ export function KPICards({
       : 0;
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
       {/* Health Factor */}
       <div
-        className={`p-4 rounded-xl border-2 bg-cro-card ${getHFBorderColor(healthFactor)}`}
+        className={`p-3 sm:p-4 rounded-xl border-2 bg-cro-card ${getHFBorderColor(healthFactor)}`}
       >
-        <div className="text-sm font-medium text-cro-muted mb-1">
+        <div className="text-xs sm:text-sm font-medium text-cro-muted mb-1">
           Health Factor
         </div>
-        <div className={`text-3xl font-bold ${getHFColor(healthFactor)}`}>
+        <div className={`text-xl sm:text-3xl font-bold ${getHFColor(healthFactor)}`}>
           {formatNumber(healthFactor)}
         </div>
-        <div className="text-xs text-cro-muted mt-1">
+        <div className="text-xs text-cro-muted mt-1 hidden sm:block">
           Buffer: {formatNumber(buffer, 1)}%
         </div>
       </div>
 
       {/* CRO Liquidation Price */}
-      <div className="p-4 rounded-xl border border-cro-border bg-cro-card">
-        <div className="text-sm font-medium text-cro-muted mb-1">
+      <div className="p-3 sm:p-4 rounded-xl border border-cro-border bg-cro-card">
+        <div className="text-xs sm:text-sm font-medium text-cro-muted mb-1">
           CRO Liq. Price
         </div>
-        <div className="text-2xl lg:text-3xl font-bold text-cro-cyan whitespace-nowrap">
+        <div className="text-lg sm:text-2xl lg:text-3xl font-bold text-cro-cyan whitespace-nowrap">
           ${formatNumber(liquidationPrice, 3)}
         </div>
-        <div className="text-xs text-cro-muted mt-1">
+        <div className="text-xs text-cro-muted mt-1 hidden sm:block">
           {priceBuffer > 0 ? `${formatNumber(priceBuffer, 1)}% below current` : '—'}
         </div>
       </div>
 
       {/* Total Borrow */}
-      <div className="p-4 rounded-xl border border-cro-border bg-cro-card">
-        <div className="text-sm font-medium text-cro-muted mb-1">
+      <div className="p-3 sm:p-4 rounded-xl border border-cro-border bg-cro-card">
+        <div className="text-xs sm:text-sm font-medium text-cro-muted mb-1">
           Total Borrowed
         </div>
-        <div className="text-3xl font-bold text-cro-text">
+        <div className="text-lg sm:text-2xl lg:text-3xl font-bold text-cro-text">
           {formatUsd(totalBorrowUsd)}
         </div>
       </div>
 
       {/* Total Collateral */}
-      <div className="p-4 rounded-xl border border-cro-border bg-cro-card">
-        <div className="text-sm font-medium text-cro-muted mb-1">
+      <div className="p-3 sm:p-4 rounded-xl border border-cro-border bg-cro-card">
+        <div className="text-xs sm:text-sm font-medium text-cro-muted mb-1">
           Total Collateral
         </div>
-        <div className="text-3xl font-bold text-cro-text">
+        <div className="text-lg sm:text-2xl lg:text-3xl font-bold text-cro-text">
           {formatUsd(totalCollateralUsd)}
         </div>
       </div>

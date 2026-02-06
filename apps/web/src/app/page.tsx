@@ -18,10 +18,10 @@ export default function Home() {
       <header className="border-b border-cro-border bg-cro-dark/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               {/* CRO Logo */}
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cro-cyan to-cro-navy flex items-center justify-center shadow-lg shadow-cro-cyan/20">
-                <svg viewBox="0 0 32 32" className="w-6 h-6" fill="none">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-cro-cyan to-cro-navy flex items-center justify-center shadow-lg shadow-cro-cyan/20">
+                <svg viewBox="0 0 32 32" className="w-5 h-5 sm:w-6 sm:h-6" fill="none">
                   <path
                     d="M16 2L4 9v14l12 7 12-7V9L16 2z"
                     fill="url(#cro-gradient)"
@@ -43,8 +43,8 @@ export default function Home() {
                 </svg>
               </div>
               <div>
-                <h1 className="font-bold text-cro-text">Collateral Dashboard</h1>
-                <p className="text-xs text-cro-muted">Cronos / Tectonic</p>
+                <h1 className="font-bold text-cro-text text-sm sm:text-base">Collateral Dashboard</h1>
+                <p className="text-xs text-cro-muted hidden sm:block">Cronos / Tectonic</p>
               </div>
             </div>
             <ConnectWallet />

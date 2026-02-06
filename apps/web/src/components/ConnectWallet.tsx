@@ -81,34 +81,35 @@ export function ConnectWallet() {
 
   if (isConnected && address) {
     return (
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-cro-card border border-cro-border rounded-lg">
+      <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-cro-card border border-cro-border rounded-lg">
           <div className="w-2 h-2 bg-cro-success rounded-full animate-pulse" />
-          <span className="text-sm text-cro-text font-mono">
-            {address.slice(0, 6)}...{address.slice(-4)}
+          <span className="text-xs sm:text-sm text-cro-text font-mono">
+            {address.slice(0, 4)}...{address.slice(-4)}
           </span>
         </div>
         <button
           onClick={() => disconnect()}
-          className="px-4 py-2 text-sm font-medium text-cro-muted bg-cro-card border border-cro-border rounded-lg hover:bg-cro-card-light hover:text-cro-text transition-colors"
+          className="px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-cro-muted bg-cro-card border border-cro-border rounded-lg hover:bg-cro-card-light hover:text-cro-text transition-colors"
         >
-          Disconnect
+          <span className="hidden sm:inline">Disconnect</span>
+          <span className="sm:hidden">×</span>
         </button>
       </div>
     );
   }
 
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-1 sm:gap-2">
       {connectors.map((connector) => (
         <button
           key={connector.uid}
           onClick={() => connect({ connector })}
           disabled={isPending}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-cro-bg bg-gradient-to-r from-cro-cyan to-cro-accent rounded-lg hover:shadow-lg hover:shadow-cro-cyan/25 transition-all disabled:opacity-50"
+          className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-cro-bg bg-gradient-to-r from-cro-cyan to-cro-accent rounded-lg hover:shadow-lg hover:shadow-cro-cyan/25 transition-all disabled:opacity-50"
         >
           {getConnectorIcon(connector.name)}
-          <span>
+          <span className="hidden sm:inline">
             {isPending ? 'Connecting...' : getConnectorDisplayName(connector.name)}
           </span>
         </button>
