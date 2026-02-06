@@ -153,7 +153,7 @@ export function Dashboard() {
             Try Demo Mode
           </button>
           <p className="text-xs text-cro-muted text-center max-w-xs">
-            Explore the simulator with sample data: 500K CRO collateral, $21.5K USDC borrowed
+            Explore the simulator with sample data
           </p>
         </div>
       </div>
@@ -256,7 +256,7 @@ export function Dashboard() {
             </div>
             <div>
               <p className="text-cro-cyan font-medium">Demo Mode</p>
-              <p className="text-sm text-cro-muted">Using sample data: 500K CRO collateral, $21.5K USDC borrowed</p>
+              <p className="text-sm text-cro-muted">Using sample data</p>
             </div>
           </div>
           <button
