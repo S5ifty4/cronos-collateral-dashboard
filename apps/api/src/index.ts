@@ -1,5 +1,6 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import rateLimit from '@fastify/rate-limit';
 import { config } from './config.js';
 import { portfolioRoutes } from './routes/portfolio.js';
 import { simulateRoutes } from './routes/simulate.js';
@@ -9,6 +10,17 @@ const fastify = Fastify({
 });
 
 async function main() {
+  // Register rate limiting
+  await fastify.register(rateLimit, {
+    max: 100, // max 100 requests
+    timeWindow: '1 minute',
+    errorResponseBuilder: () => ({
+      statusCode: 429,
+      error: 'Too Many Requests',
+      message: 'Rate limit exceeded. Please try again later.',
+    }),
+  });
+
   // Register CORS
   await fastify.register(cors, {
     origin: config.corsOrigin,
