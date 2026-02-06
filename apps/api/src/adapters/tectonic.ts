@@ -403,16 +403,16 @@ const COINGECKO_IDS: Record<string, string> = {
 
 // Fallback prices if API fails
 const FALLBACK_PRICES: Record<string, number> = {
-  CRO: 0.15,
+  CRO: 0.09,
   USDC: 1.0,
-  ETH: 2500,
-  WBTC: 43000,
+  ETH: 3200,
+  WBTC: 98000,
 };
 
 // Price cache to avoid rate limiting
 let priceCache: Record<string, number> | null = null;
 let priceCacheTimestamp = 0;
-const PRICE_CACHE_TTL = 60000; // 60 seconds
+const PRICE_CACHE_TTL = 300000; // 5 minutes
 
 /**
  * Fetch current prices from CoinGecko API with caching
