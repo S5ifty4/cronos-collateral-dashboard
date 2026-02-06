@@ -21,9 +21,10 @@ async function main() {
     }),
   });
 
-  // Register CORS
+  // Register CORS - supports multiple origins separated by comma
+  const allowedOrigins = config.corsOrigin.split(',').map(o => o.trim());
   await fastify.register(cors, {
-    origin: config.corsOrigin,
+    origin: allowedOrigins.length === 1 ? allowedOrigins[0] : allowedOrigins,
     methods: ['GET', 'POST'],
   });
 
