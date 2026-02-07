@@ -329,7 +329,7 @@ export function Dashboard() {
               />
             </div>
             <div className="flex items-center justify-between sm:justify-start gap-2">
-              <label className="text-xs sm:text-sm text-cro-muted whitespace-nowrap">USDC Debt:</label>
+              <label className="text-xs sm:text-sm text-cro-muted whitespace-nowrap">USDC Borrowed:</label>
               <input
                 type="number"
                 value={demoBorrowed}
