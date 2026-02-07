@@ -5,6 +5,23 @@ import { useState, useEffect } from 'react';
 
 // Wallet icons as inline SVGs
 const WalletIcons: Record<string, React.ReactNode> = {
+  CryptoComWallet: (
+    <svg viewBox="0 0 32 32" className="w-5 h-5">
+      <circle cx="16" cy="16" r="14" fill="#002D74"/>
+      <path
+        d="M16 6L8 10.5v11L16 26l8-4.5v-11L16 6z"
+        fill="none"
+        stroke="#00D4FF"
+        strokeWidth="1.5"
+      />
+      <path
+        d="M16 10l-4 2.25v5.5L16 20l4-2.25v-5.5L16 10z"
+        fill="#002D74"
+        stroke="#00D4FF"
+        strokeWidth="1"
+      />
+    </svg>
+  ),
   MetaMask: (
     <svg viewBox="0 0 35 33" className="w-5 h-5">
       <path d="M32.96 1l-13.14 9.72 2.45-5.73L32.96 1z" fill="#E2761B" stroke="#E2761B" strokeLinecap="round" strokeLinejoin="round"/>
@@ -38,24 +55,7 @@ const WalletIcons: Record<string, React.ReactNode> = {
   ),
 };
 
-// Get icon for connector
-function getConnectorIcon(connectorName: string): React.ReactNode {
-  if (connectorName.toLowerCase().includes('metamask')) {
-    return WalletIcons.MetaMask;
-  }
-  if (connectorName.toLowerCase().includes('walletconnect')) {
-    return WalletIcons.WalletConnect;
-  }
-  return WalletIcons.Injected;
-}
 
-// Get display name for connector
-function getConnectorDisplayName(connectorName: string): string {
-  if (connectorName.toLowerCase().includes('injected')) {
-    return 'Browser Wallet';
-  }
-  return connectorName;
-}
 
 export function ConnectWallet() {
   const { address, isConnected } = useAccount();
@@ -99,21 +99,60 @@ export function ConnectWallet() {
     );
   }
 
+  // Find the injected connector (works for both Crypto.com and MetaMask)
+  const injectedConnector = connectors.find(c =>
+    c.name.toLowerCase().includes('injected') ||
+    c.name.toLowerCase() === 'browser wallet' ||
+    c.name.toLowerCase().includes('metamask')
+  );
+  const walletConnectConnector = connectors.find(c => c.name.toLowerCase().includes('walletconnect'));
+
   return (
     <div className="flex gap-1 sm:gap-2">
-      {connectors.map((connector) => (
+      {/* Crypto.com Onchain Wallet - uses injected connector */}
+      {injectedConnector && (
         <button
-          key={connector.uid}
-          onClick={() => connect({ connector })}
+          onClick={() => connect({ connector: injectedConnector })}
           disabled={isPending}
           className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-cro-bg bg-gradient-to-r from-cro-cyan to-cro-accent rounded-lg hover:shadow-lg hover:shadow-cro-cyan/25 transition-all disabled:opacity-50"
+          title="Connect with Crypto.com Onchain Wallet"
         >
-          {getConnectorIcon(connector.name)}
+          {WalletIcons.CryptoComWallet}
           <span className="hidden sm:inline">
-            {isPending ? 'Connecting...' : getConnectorDisplayName(connector.name)}
+            {isPending ? 'Connecting...' : 'Crypto.com'}
           </span>
         </button>
-      ))}
+      )}
+
+      {/* MetaMask - also uses injected connector */}
+      {injectedConnector && (
+        <button
+          onClick={() => connect({ connector: injectedConnector })}
+          disabled={isPending}
+          className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-cro-bg bg-gradient-to-r from-cro-cyan to-cro-accent rounded-lg hover:shadow-lg hover:shadow-cro-cyan/25 transition-all disabled:opacity-50"
+          title="Connect with MetaMask"
+        >
+          {WalletIcons.MetaMask}
+          <span className="hidden sm:inline">
+            {isPending ? 'Connecting...' : 'MetaMask'}
+          </span>
+        </button>
+      )}
+
+      {/* WalletConnect */}
+      {walletConnectConnector && (
+        <button
+          onClick={() => connect({ connector: walletConnectConnector })}
+          disabled={isPending}
+          className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-cro-bg bg-gradient-to-r from-cro-cyan to-cro-accent rounded-lg hover:shadow-lg hover:shadow-cro-cyan/25 transition-all disabled:opacity-50"
+          title="Connect with WalletConnect"
+        >
+          {WalletIcons.WalletConnect}
+          <span className="hidden sm:inline">
+            {isPending ? 'Connecting...' : 'WalletConnect'}
+          </span>
+        </button>
+      )}
     </div>
   );
 }

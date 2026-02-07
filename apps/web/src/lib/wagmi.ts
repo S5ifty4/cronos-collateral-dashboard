@@ -8,7 +8,9 @@ const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'demo';
 export const config = createConfig({
   chains: [cronos],
   connectors: [
+    // Generic injected connector (works with Crypto.com, MetaMask, etc.)
     injected(),
+    // WalletConnect for mobile and other wallets
     walletConnect({ projectId }),
   ],
   transports: {
