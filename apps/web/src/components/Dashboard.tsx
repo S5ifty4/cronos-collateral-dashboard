@@ -20,16 +20,17 @@ const FALLBACK_PRICES: Record<string, number> = {
   WBTC: 98000,
 };
 
-function createDemoPortfolio(prices: Record<string, number>, croAmount: number, usdcBorrowed: number): UnifiedPortfolio {
+function createDemoPortfolio(prices: Record<string, number>, croAmount: number, usdcBorrowed: number, ltPercent: number): UnifiedPortfolio {
   const croPrice = prices.CRO || FALLBACK_PRICES.CRO;
   const croValueUsd = croAmount * croPrice;
+  const lt = ltPercent / 100;
 
   const collaterals: CollateralPosition[] = [
     {
       asset: { symbol: 'CRO', address: '0x5C7F8A570d578ED60E9c0fE56278c30F1B1c5A4e', decimals: 18 },
       amount: croAmount,
       valueUsd: croValueUsd,
-      liquidationThreshold: 0.75,
+      liquidationThreshold: lt,
       enabled: true,
     },
   ];
@@ -79,6 +80,7 @@ export function Dashboard() {
   const [demoMode, setDemoMode] = useState(false);
   const [demoCollateral, setDemoCollateral] = useState(500000);
   const [demoBorrowed, setDemoBorrowed] = useState(10000);
+  const [demoLT, setDemoLT] = useState(75);
 
   useEffect(() => {
     setMounted(true);
@@ -108,7 +110,7 @@ export function Dashboard() {
 
   // Use demo portfolio when in demo mode
   const demoPrices = livePrices || FALLBACK_PRICES;
-  const demoPortfolio = demoMode ? createDemoPortfolio(demoPrices, demoCollateral, demoBorrowed) : null;
+  const demoPortfolio = demoMode ? createDemoPortfolio(demoPrices, demoCollateral, demoBorrowed, demoLT) : null;
   const activePortfolio = demoMode ? demoPortfolio : portfolio;
 
   // Show loading placeholder during SSR to avoid hydration mismatch
@@ -264,7 +266,7 @@ export function Dashboard() {
               Exit Demo
             </button>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <div className="flex items-center justify-between sm:justify-start gap-2">
               <label className="text-xs sm:text-sm text-cro-muted whitespace-nowrap">CRO Collateral:</label>
               <input
@@ -281,6 +283,15 @@ export function Dashboard() {
                 value={demoBorrowed}
                 onChange={(e) => setDemoBorrowed(Math.max(0, Number(e.target.value)))}
                 className="w-28 sm:w-32 px-2 sm:px-3 py-1.5 text-sm font-mono bg-cro-dark border border-cro-border rounded-lg text-cro-text focus:outline-none focus:ring-1 focus:ring-cro-cyan"
+              />
+            </div>
+            <div className="flex items-center justify-between sm:justify-start gap-2">
+              <label className="text-xs sm:text-sm text-cro-muted whitespace-nowrap">LT %:</label>
+              <input
+                type="number"
+                value={demoLT}
+                onChange={(e) => setDemoLT(Math.min(100, Math.max(0, Number(e.target.value))))}
+                className="w-20 sm:w-24 px-2 sm:px-3 py-1.5 text-sm font-mono bg-cro-dark border border-cro-border rounded-lg text-cro-text focus:outline-none focus:ring-1 focus:ring-cro-cyan"
               />
             </div>
           </div>
