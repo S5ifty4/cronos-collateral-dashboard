@@ -2,6 +2,7 @@
 
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
 // Wallet icons as inline SVGs
 const WalletIcons: Record<string, React.ReactNode> = {
@@ -148,9 +149,9 @@ export function ConnectWallet() {
         Connect Wallet
       </button>
 
-      {/* Modal Overlay */}
-      {isModalOpen && (
-        <div className="fixed top-0 left-0 right-0 bottom-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+      {/* Modal Overlay - rendered via portal to body for proper centering */}
+      {isModalOpen && mounted && createPortal(
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
           {/* Modal */}
           <div
             ref={modalRef}
@@ -230,7 +231,8 @@ export function ConnectWallet() {
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
