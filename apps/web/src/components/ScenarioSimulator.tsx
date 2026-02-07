@@ -20,6 +20,7 @@ interface ScenarioSimulatorProps {
   snapshot: ProtocolSnapshot;
   prices: Record<string, number>;
   onSimulationResult?: (data: SimulationData | null) => void;
+  collateralAsset?: string; // Symbol of the collateral asset (defaults to first collateral or 'CRO')
 }
 
 function formatNumber(n: number, decimals = 2): string {
@@ -34,6 +35,7 @@ export function ScenarioSimulator({
   snapshot,
   prices,
   onSimulationResult,
+  collateralAsset,
 }: ScenarioSimulatorProps) {
   const [priceShock, setPriceShock] = useState(0);
   const [repayAmount, setRepayAmount] = useState(0);
@@ -41,20 +43,22 @@ export function ScenarioSimulator({
   const [addCollateralAmount, setAddCollateralAmount] = useState(0);
   const [result, setResult] = useState<ScenarioResult | null>(null);
 
-  const croPrice = prices['CRO'] || 0.15;
+  // Determine the collateral asset symbol - use prop, or first collateral, or default to 'CRO'
+  const assetSymbol = collateralAsset || snapshot.collaterals[0]?.asset.symbol || 'CRO';
+  const assetPrice = prices[assetSymbol] || 0.15;
   const maxRepay = snapshot.totals.borrowUsd;
   const maxCollateral = 1000000;
 
-  // Get CRO liquidation threshold
-  const croCollateral = snapshot.collaterals.find(c => c.asset.symbol === 'CRO');
-  const croLT = croCollateral?.liquidationThreshold || 0.75;
+  // Get collateral's liquidation threshold
+  const collateral = snapshot.collaterals.find(c => c.asset.symbol === assetSymbol);
+  const collateralLT = collateral?.liquidationThreshold || 0.75;
 
   // Calculate dynamic available borrow based on scenario inputs
   // Use safety factor to match Tectonic's conservative borrow limits
   const TECTONIC_SAFETY_FACTOR = 0.58;
   const priceMultiplier = 1 + priceShock / 100;
-  const adjustedCroPrice = croPrice * priceMultiplier;
-  const addedCollateralValue = addCollateralAmount * adjustedCroPrice * croLT * TECTONIC_SAFETY_FACTOR;
+  const adjustedAssetPrice = assetPrice * priceMultiplier;
+  const addedCollateralValue = addCollateralAmount * adjustedAssetPrice * collateralLT * TECTONIC_SAFETY_FACTOR;
   const baseAvailableBorrow = snapshot.risk.availableBorrowUsd;
 
   // Calculate change from base: price impact + added collateral - repay change - new borrow
@@ -69,7 +73,7 @@ export function ScenarioSimulator({
     const actions: ScenarioAction[] = [];
 
     if (priceShock !== 0) {
-      actions.push({ type: 'priceShock', symbol: 'CRO', pctChange: priceShock });
+      actions.push({ type: 'priceShock', symbol: assetSymbol, pctChange: priceShock });
     }
     if (repayAmount > 0) {
       actions.push({ type: 'repay', symbol: 'USDC', amount: repayAmount });
@@ -80,7 +84,7 @@ export function ScenarioSimulator({
     if (addCollateralAmount > 0) {
       actions.push({
         type: 'addCollateral',
-        symbol: 'CRO',
+        symbol: assetSymbol,
         amount: addCollateralAmount,
       });
     }
@@ -98,13 +102,13 @@ export function ScenarioSimulator({
     // Build simulation data with all adjustments
     const simData: SimulationData = {
       result: simResult,
-      addedCollateral: addCollateralAmount > 0 ? { CRO: addCollateralAmount } : {},
+      addedCollateral: addCollateralAmount > 0 ? { [assetSymbol]: addCollateralAmount } : {},
       addedBorrow: borrowAmount > 0 ? { USDC: borrowAmount } : {},
       repaid: repayAmount > 0 ? { USDC: repayAmount } : {},
-      priceShocks: priceShock !== 0 ? { CRO: priceShock } : {},
+      priceShocks: priceShock !== 0 ? { [assetSymbol]: priceShock } : {},
     };
     onSimulationResult?.(simData);
-  }, [priceShock, repayAmount, borrowAmount, addCollateralAmount, snapshot, prices, onSimulationResult]);
+  }, [priceShock, repayAmount, borrowAmount, addCollateralAmount, snapshot, prices, onSimulationResult, assetSymbol]);
 
   useEffect(() => {
     runSimulation();
@@ -149,15 +153,15 @@ export function ScenarioSimulator({
       </div>
 
       <div className="space-y-5">
-        {/* CRO Price Shock */}
+        {/* Price Shock */}
         <div>
           <div className="flex justify-between items-center mb-2">
             <label className="text-sm font-medium text-cro-text">
-              CRO Price Change
+              {assetSymbol} Price Change
             </label>
             <div className="flex items-center gap-2">
               <span className="text-xs text-cro-muted">
-                Current: <span className="font-mono font-medium text-cro-text">${formatNumber(croPrice, 4)}</span>
+                Current: <span className="font-mono font-medium text-cro-text">${formatNumber(assetPrice, 4)}</span>
               </span>
               <span
                 className={`text-sm font-mono ${
@@ -180,7 +184,7 @@ export function ScenarioSimulator({
           <div className="flex justify-between text-xs text-cro-muted mt-1">
             <span>-100%</span>
             <span className={`font-mono ${priceShock !== 0 ? 'text-cro-cyan font-medium' : 'text-cro-muted'}`}>
-              Simulated: ${formatNumber(adjustedCroPrice, 4)}
+              Simulated: ${formatNumber(adjustedAssetPrice, 4)}
             </span>
             <span>+100%</span>
           </div>
@@ -261,11 +265,11 @@ export function ScenarioSimulator({
           </div>
         </div>
 
-        {/* Add CRO Collateral */}
+        {/* Add Collateral */}
         <div>
           <div className="flex justify-between items-center mb-2">
             <label className="text-sm font-medium text-cro-text">
-              Add CRO Collateral
+              Add {assetSymbol} Collateral
             </label>
             <div className="flex items-center gap-1">
               <input
@@ -278,7 +282,7 @@ export function ScenarioSimulator({
                 placeholder="0"
                 className="w-24 px-2 py-1 text-sm font-mono text-right border border-cro-border rounded bg-cro-dark text-cro-text focus:outline-none focus:ring-1 focus:ring-cro-cyan focus:border-cro-cyan"
               />
-              <span className="text-sm text-cro-muted">CRO</span>
+              <span className="text-sm text-cro-muted">{assetSymbol}</span>
             </div>
           </div>
           <input
@@ -292,7 +296,7 @@ export function ScenarioSimulator({
           />
           <div className="flex justify-between text-xs text-cro-muted mt-1">
             <span>0</span>
-            <span>1M CRO</span>
+            <span>1M {assetSymbol}</span>
           </div>
         </div>
 

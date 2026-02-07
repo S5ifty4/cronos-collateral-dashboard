@@ -235,13 +235,16 @@ export function Dashboard() {
   // Use simulated values if available
   const simulationResult = simulationData?.result || null;
 
+  // Get the collateral asset symbol for price displays
+  const collateralSymbol = demoMode ? demoAsset : (mainSnapshot.collaterals[0]?.asset.symbol || 'CRO');
+
   const displayHF = simulationResult
     ? simulationResult.simulated.healthFactor
     : mainSnapshot.risk.healthFactor;
 
   const displayLiqPrice = simulationResult
-    ? simulationResult.simulated.liquidationPrices['CRO'] || 0
-    : mainSnapshot.risk.liquidationPrices['CRO'] || 0;
+    ? simulationResult.simulated.liquidationPrices[collateralSymbol] || 0
+    : mainSnapshot.risk.liquidationPrices[collateralSymbol] || 0;
 
   const displayBorrow = simulationResult
     ? simulationResult.simulated.totalBorrowUsd
@@ -354,9 +357,10 @@ export function Dashboard() {
       <KPICards
         healthFactor={displayHF}
         liquidationPrice={displayLiqPrice}
-        currentPrice={activePortfolio.prices['CRO'] || 0}
+        currentPrice={activePortfolio.prices[collateralSymbol] || 0}
         totalBorrowUsd={displayBorrow}
         totalCollateralUsd={displayCollateral}
+        collateralSymbol={collateralSymbol}
       />
 
       {/* Position Tables */}
@@ -379,6 +383,7 @@ export function Dashboard() {
           snapshot={mainSnapshot}
           prices={activePortfolio.prices}
           onSimulationResult={setSimulationData}
+          collateralAsset={demoMode ? demoAsset : undefined}
         />
         <TargetHFHelper
           snapshot={mainSnapshot}

@@ -8,6 +8,7 @@ interface KPICardsProps {
   currentPrice: number;
   totalBorrowUsd: number;
   totalCollateralUsd: number;
+  collateralSymbol?: string;
 }
 
 function formatNumber(n: number | null | undefined, decimals = 2): string {
@@ -44,6 +45,7 @@ export function KPICards({
   currentPrice,
   totalBorrowUsd,
   totalCollateralUsd,
+  collateralSymbol = 'CRO',
 }: KPICardsProps) {
   const buffer = calculateBufferPercentage(healthFactor ?? Infinity);
   const priceBuffer =
@@ -68,10 +70,10 @@ export function KPICards({
         </div>
       </div>
 
-      {/* CRO Liquidation Price */}
+      {/* Liquidation Price */}
       <div className="p-3 sm:p-4 rounded-xl border border-cro-border bg-cro-card">
         <div className="text-xs sm:text-sm font-medium text-cro-muted mb-1">
-          CRO Liq. Price
+          {collateralSymbol} Liq. Price
         </div>
         <div className="text-lg sm:text-2xl lg:text-3xl font-bold text-cro-cyan whitespace-nowrap">
           ${formatNumber(liquidationPrice, 3)}
