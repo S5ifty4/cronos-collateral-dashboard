@@ -8,6 +8,15 @@ import { Dashboard } from '@/components/Dashboard';
 export default function Home() {
   const { isConnected } = useAccount();
   const [mounted, setMounted] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const donationAddress = '0x25f8FEBc37F6887834B5f43e6E190BeDeC2c15Df';
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(donationAddress);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -66,17 +75,24 @@ export default function Home() {
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-2 text-xs text-cro-muted">
               <span>Help keep this app running:</span>
-              <code className="px-2 py-1 bg-cro-card border border-cro-border rounded text-cro-cyan text-xs break-all">
-                0x25f8FEBc37F6887834B5f43e6E190BeDeC2c15Df
-              </code>
               <button
-                onClick={() => {
-                  navigator.clipboard.writeText('0x25f8FEBc37F6887834B5f43e6E190BeDeC2c15Df');
-                }}
-                className="px-2 py-1 text-cro-cyan hover:bg-cro-cyan/10 rounded transition-colors"
-                title="Copy address"
+                onClick={handleCopy}
+                className="group flex items-center gap-2 px-3 py-1.5 bg-cro-card border border-cro-border rounded-lg hover:border-cro-cyan/50 hover:bg-cro-cyan/5 transition-all cursor-pointer"
+                title="Click to copy address"
               >
-                Copy
+                <code className="text-cro-cyan text-xs font-mono">
+                  {donationAddress.slice(0, 6)}...{donationAddress.slice(-4)}
+                </code>
+                {copied ? (
+                  <svg className="w-4 h-4 text-cro-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4 text-cro-muted group-hover:text-cro-cyan transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                )}
+                {copied && <span className="text-cro-success text-xs">Copied!</span>}
               </button>
             </div>
           </div>
