@@ -150,11 +150,11 @@ export function ConnectWallet() {
 
       {/* Modal Overlay */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed top-0 left-0 right-0 bottom-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
           {/* Modal */}
           <div
             ref={modalRef}
-            className="bg-cro-card border border-cro-border rounded-2xl w-full max-w-md shadow-2xl shadow-black/50"
+            className="bg-cro-card border border-cro-border rounded-2xl w-full max-w-md shadow-2xl shadow-black/50 max-h-[90vh] overflow-auto"
           >
             {/* Modal Header */}
             <div className="flex items-center justify-between p-4 border-b border-cro-border">
