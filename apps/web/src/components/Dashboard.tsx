@@ -18,18 +18,46 @@ const FALLBACK_PRICES: Record<string, number> = {
   USDC: 1.0,
   ETH: 3200,
   WBTC: 98000,
+  BTC: 98000,
+  SOL: 180,
+  BNB: 600,
+  XRP: 2.5,
+  ADA: 0.9,
+  AVAX: 35,
+  DOGE: 0.3,
+  DOT: 7,
+  MATIC: 0.5,
+  LINK: 18,
+  ATOM: 9,
 };
 
-function createDemoPortfolio(prices: Record<string, number>, croAmount: number, usdcBorrowed: number, ltPercent: number): UnifiedPortfolio {
-  const croPrice = prices.CRO || FALLBACK_PRICES.CRO;
-  const croValueUsd = croAmount * croPrice;
+// Collateral options with default LT percentages
+const COLLATERAL_OPTIONS = [
+  { symbol: 'CRO', name: 'Cronos', defaultLT: 75 },
+  { symbol: 'BTC', name: 'Bitcoin', defaultLT: 80 },
+  { symbol: 'ETH', name: 'Ethereum', defaultLT: 82 },
+  { symbol: 'SOL', name: 'Solana', defaultLT: 70 },
+  { symbol: 'BNB', name: 'BNB', defaultLT: 75 },
+  { symbol: 'XRP', name: 'XRP', defaultLT: 65 },
+  { symbol: 'ADA', name: 'Cardano', defaultLT: 65 },
+  { symbol: 'AVAX', name: 'Avalanche', defaultLT: 70 },
+  { symbol: 'DOGE', name: 'Dogecoin', defaultLT: 50 },
+  { symbol: 'DOT', name: 'Polkadot', defaultLT: 65 },
+  { symbol: 'MATIC', name: 'Polygon', defaultLT: 70 },
+  { symbol: 'LINK', name: 'Chainlink', defaultLT: 70 },
+  { symbol: 'ATOM', name: 'Cosmos', defaultLT: 65 },
+];
+
+function createDemoPortfolio(prices: Record<string, number>, collateralAmount: number, usdcBorrowed: number, ltPercent: number, assetSymbol: string): UnifiedPortfolio {
+  const assetPrice = prices[assetSymbol] || FALLBACK_PRICES[assetSymbol] || 1;
+  const collateralValueUsd = collateralAmount * assetPrice;
   const lt = ltPercent / 100;
 
   const collaterals: CollateralPosition[] = [
     {
-      asset: { symbol: 'CRO', address: '0x5C7F8A570d578ED60E9c0fE56278c30F1B1c5A4e', decimals: 18 },
-      amount: croAmount,
-      valueUsd: croValueUsd,
+      asset: { symbol: assetSymbol, address: '0x0000000000000000000000000000000000000000', decimals: 18 },
+      amount: collateralAmount,
+      valueUsd: collateralValueUsd,
       liquidationThreshold: lt,
       enabled: true,
     },
@@ -81,6 +109,16 @@ export function Dashboard() {
   const [demoCollateral, setDemoCollateral] = useState(500000);
   const [demoBorrowed, setDemoBorrowed] = useState(10000);
   const [demoLT, setDemoLT] = useState(75);
+  const [demoAsset, setDemoAsset] = useState('CRO');
+
+  // Update LT when asset changes
+  const handleAssetChange = (symbol: string) => {
+    setDemoAsset(symbol);
+    const asset = COLLATERAL_OPTIONS.find(a => a.symbol === symbol);
+    if (asset) {
+      setDemoLT(asset.defaultLT);
+    }
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -110,7 +148,7 @@ export function Dashboard() {
 
   // Use demo portfolio when in demo mode
   const demoPrices = livePrices || FALLBACK_PRICES;
-  const demoPortfolio = demoMode ? createDemoPortfolio(demoPrices, demoCollateral, demoBorrowed, demoLT) : null;
+  const demoPortfolio = demoMode ? createDemoPortfolio(demoPrices, demoCollateral, demoBorrowed, demoLT, demoAsset) : null;
   const activePortfolio = demoMode ? demoPortfolio : portfolio;
 
   // Show loading placeholder during SSR to avoid hydration mismatch
@@ -266,23 +304,37 @@ export function Dashboard() {
               Exit Demo
             </button>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
             <div className="flex items-center justify-between sm:justify-start gap-2">
-              <label className="text-xs sm:text-sm text-cro-muted whitespace-nowrap">CRO Collateral:</label>
+              <label className="text-xs sm:text-sm text-cro-muted whitespace-nowrap">Collateral:</label>
+              <select
+                value={demoAsset}
+                onChange={(e) => handleAssetChange(e.target.value)}
+                className="w-24 sm:w-28 px-2 sm:px-3 py-1.5 text-sm bg-cro-dark border border-cro-border rounded-lg text-cro-text focus:outline-none focus:ring-1 focus:ring-cro-cyan"
+              >
+                {COLLATERAL_OPTIONS.map((asset) => (
+                  <option key={asset.symbol} value={asset.symbol}>
+                    {asset.symbol}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-center justify-between sm:justify-start gap-2">
+              <label className="text-xs sm:text-sm text-cro-muted whitespace-nowrap">Amount:</label>
               <input
                 type="number"
                 value={demoCollateral}
                 onChange={(e) => setDemoCollateral(Math.max(0, Number(e.target.value)))}
-                className="w-28 sm:w-32 px-2 sm:px-3 py-1.5 text-sm font-mono bg-cro-dark border border-cro-border rounded-lg text-cro-text focus:outline-none focus:ring-1 focus:ring-cro-cyan"
+                className="w-24 sm:w-28 px-2 sm:px-3 py-1.5 text-sm font-mono bg-cro-dark border border-cro-border rounded-lg text-cro-text focus:outline-none focus:ring-1 focus:ring-cro-cyan"
               />
             </div>
             <div className="flex items-center justify-between sm:justify-start gap-2">
-              <label className="text-xs sm:text-sm text-cro-muted whitespace-nowrap">USDC Borrowed:</label>
+              <label className="text-xs sm:text-sm text-cro-muted whitespace-nowrap">USDC Debt:</label>
               <input
                 type="number"
                 value={demoBorrowed}
                 onChange={(e) => setDemoBorrowed(Math.max(0, Number(e.target.value)))}
-                className="w-28 sm:w-32 px-2 sm:px-3 py-1.5 text-sm font-mono bg-cro-dark border border-cro-border rounded-lg text-cro-text focus:outline-none focus:ring-1 focus:ring-cro-cyan"
+                className="w-24 sm:w-28 px-2 sm:px-3 py-1.5 text-sm font-mono bg-cro-dark border border-cro-border rounded-lg text-cro-text focus:outline-none focus:ring-1 focus:ring-cro-cyan"
               />
             </div>
             <div className="flex items-center justify-between sm:justify-start gap-2">

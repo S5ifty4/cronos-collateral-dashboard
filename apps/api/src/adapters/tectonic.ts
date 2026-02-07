@@ -399,6 +399,17 @@ const COINGECKO_IDS: Record<string, string> = {
   USDC: 'usd-coin',
   ETH: 'ethereum',
   WBTC: 'wrapped-bitcoin',
+  BTC: 'bitcoin',
+  SOL: 'solana',
+  BNB: 'binancecoin',
+  XRP: 'ripple',
+  ADA: 'cardano',
+  AVAX: 'avalanche-2',
+  DOGE: 'dogecoin',
+  DOT: 'polkadot',
+  MATIC: 'matic-network',
+  LINK: 'chainlink',
+  ATOM: 'cosmos',
 };
 
 // Fallback prices if API fails
@@ -407,6 +418,17 @@ const FALLBACK_PRICES: Record<string, number> = {
   USDC: 1.0,
   ETH: 3200,
   WBTC: 98000,
+  BTC: 98000,
+  SOL: 180,
+  BNB: 600,
+  XRP: 2.5,
+  ADA: 0.9,
+  AVAX: 35,
+  DOGE: 0.3,
+  DOT: 7,
+  MATIC: 0.5,
+  LINK: 18,
+  ATOM: 9,
 };
 
 // Price cache to avoid rate limiting
