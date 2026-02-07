@@ -326,8 +326,9 @@ export function Dashboard() {
               <label className="text-xs sm:text-sm text-cro-muted whitespace-nowrap">Amount:</label>
               <input
                 type="number"
-                value={demoCollateral}
-                onChange={(e) => setDemoCollateral(Math.max(0, Number(e.target.value)))}
+                value={demoCollateral || ''}
+                onChange={(e) => setDemoCollateral(e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value, 10) || 0))}
+                placeholder="0"
                 className="w-24 sm:w-28 px-2 sm:px-3 py-1.5 text-sm font-mono bg-cro-dark border border-cro-border rounded-lg text-cro-text focus:outline-none focus:ring-1 focus:ring-cro-cyan"
               />
             </div>
@@ -335,8 +336,9 @@ export function Dashboard() {
               <label className="text-xs sm:text-sm text-cro-muted whitespace-nowrap">USDC Borrowed:</label>
               <input
                 type="number"
-                value={demoBorrowed}
-                onChange={(e) => setDemoBorrowed(Math.max(0, Number(e.target.value)))}
+                value={demoBorrowed || ''}
+                onChange={(e) => setDemoBorrowed(e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value, 10) || 0))}
+                placeholder="0"
                 className="w-24 sm:w-28 px-2 sm:px-3 py-1.5 text-sm font-mono bg-cro-dark border border-cro-border rounded-lg text-cro-text focus:outline-none focus:ring-1 focus:ring-cro-cyan"
               />
             </div>
