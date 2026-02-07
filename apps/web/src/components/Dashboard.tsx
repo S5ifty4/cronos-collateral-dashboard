@@ -110,6 +110,7 @@ export function Dashboard() {
   const [demoBorrowed, setDemoBorrowed] = useState(10000);
   const [demoLT, setDemoLT] = useState(75);
   const [demoAsset, setDemoAsset] = useState('CRO');
+  const [selectedLoanIndex, setSelectedLoanIndex] = useState(0);
 
   // Update LT when asset changes
   const handleAssetChange = (symbol: string) => {
@@ -232,11 +233,27 @@ export function Dashboard() {
     );
   }
 
+  // Generate loan pairs from collaterals and borrows
+  // Each loan is a collateral/borrow pair for focused analysis
+  const loanPairs = mainSnapshot.collaterals.map((col, idx) => {
+    const primaryBorrow = mainSnapshot.borrows[0]; // Usually USDC
+    return {
+      id: idx,
+      label: `${col.asset.symbol}/${primaryBorrow?.asset.symbol || 'USDC'}`,
+      collateral: col,
+      borrow: primaryBorrow,
+    };
+  });
+
+  // Ensure selected index is valid
+  const validSelectedIndex = Math.min(selectedLoanIndex, Math.max(0, loanPairs.length - 1));
+  const selectedLoan = loanPairs[validSelectedIndex];
+
   // Use simulated values if available
   const simulationResult = simulationData?.result || null;
 
-  // Get the collateral asset symbol for price displays
-  const collateralSymbol = demoMode ? demoAsset : (mainSnapshot.collaterals[0]?.asset.symbol || 'CRO');
+  // Get the collateral asset symbol for price displays (use selected loan's collateral)
+  const collateralSymbol = demoMode ? demoAsset : (selectedLoan?.collateral.asset.symbol || mainSnapshot.collaterals[0]?.asset.symbol || 'CRO');
 
   const displayHF = simulationResult
     ? simulationResult.simulated.healthFactor
@@ -288,6 +305,28 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Loan Position Tabs - Only show when connected (not in demo mode) */}
+      {!demoMode && loanPairs.length > 0 && (
+        <div className="bg-cro-card rounded-xl border border-cro-border p-2">
+          <div className="flex items-center gap-2 overflow-x-auto">
+            <span className="text-xs text-cro-muted px-2 whitespace-nowrap">Positions:</span>
+            {loanPairs.map((loan, idx) => (
+              <button
+                key={loan.id}
+                onClick={() => setSelectedLoanIndex(idx)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+                  validSelectedIndex === idx
+                    ? 'bg-cro-cyan text-cro-dark'
+                    : 'bg-cro-dark text-cro-muted hover:text-cro-text hover:bg-cro-border'
+                }`}
+              >
+                {loan.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Demo Mode Banner */}
       {demoMode && (
         <div className="bg-cro-cyan/10 border border-cro-cyan rounded-lg p-3 sm:p-4">
