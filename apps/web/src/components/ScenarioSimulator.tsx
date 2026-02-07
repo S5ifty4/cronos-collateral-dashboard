@@ -178,11 +178,11 @@ export function ScenarioSimulator({
             className="w-full h-2 bg-cro-border rounded-lg appearance-none cursor-pointer"
           />
           <div className="flex justify-between text-xs text-cro-muted mt-1">
-            <span>-50%</span>
+            <span>-100%</span>
             <span className={`font-mono ${priceShock !== 0 ? 'text-cro-cyan font-medium' : 'text-cro-muted'}`}>
               Simulated: ${formatNumber(adjustedCroPrice, 4)}
             </span>
-            <span>+50%</span>
+            <span>+100%</span>
           </div>
         </div>
 
