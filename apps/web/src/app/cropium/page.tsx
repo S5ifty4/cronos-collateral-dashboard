@@ -31,6 +31,8 @@ export default function CropiumPage() {
   const [mounted, setMounted] = useState(false);
   const [simulatedPrice, setSimulatedPrice] = useState(0);
   const [priceInput, setPriceInput] = useState('');
+  const [manualCroInput, setManualCroInput] = useState('');
+  const [useManualInput, setUseManualInput] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -73,8 +75,14 @@ export default function CropiumPage() {
     .filter(c => c.asset.symbol === 'CRO')
     .reduce((sum, c) => sum + c.amount, 0) || 0;
 
-  // Total CRO
-  const totalCro = walletCro + positionCro;
+  // Auto-detected total
+  const autoDetectedCro = walletCro + positionCro;
+
+  // Manual input value
+  const manualCro = parseFloat(manualCroInput) || 0;
+
+  // Total CRO - use manual if enabled or not connected, otherwise use auto-detected
+  const totalCro = (useManualInput || !isConnected) ? manualCro : autoDetectedCro;
 
   // Current and simulated values
   const currentValue = totalCro * currentCroPrice;
@@ -133,37 +141,67 @@ export default function CropiumPage() {
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {!isConnected ? (
-          <div className="text-center py-20">
-            <span className="text-6xl mb-6 block">💉</span>
-            <h2 className="text-xl font-semibold text-cro-text mb-2">Connect Your Wallet</h2>
-            <p className="text-cro-muted mb-6">Connect your wallet to see your CRO holdings</p>
-            <button
-              onClick={() => router.push('/')}
-              className="px-6 py-3 bg-cro-cyan text-cro-bg rounded-lg font-medium hover:shadow-lg hover:shadow-cro-cyan/25 transition-all"
-            >
-              Go Back & Connect
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-8">
+        <div className="space-y-8">
             {/* CRO Holdings Summary */}
             <div className="bg-cro-card rounded-xl border border-cro-border p-6">
-              <h2 className="text-lg font-semibold text-cro-text mb-4">Your CRO Holdings</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="p-4 bg-cro-dark rounded-lg">
-                  <div className="text-sm text-cro-muted mb-1">Wallet Balance</div>
-                  <div className="text-xl font-bold text-cro-text">{formatNumber(walletCro)} CRO</div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-cro-text">Your CRO Holdings</h2>
+                {isConnected && (
+                  <button
+                    onClick={() => setUseManualInput(!useManualInput)}
+                    className={`px-3 py-1 text-xs rounded-lg transition-colors ${
+                      useManualInput
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-cro-dark text-cro-muted hover:text-cro-text border border-cro-border'
+                    }`}
+                  >
+                    {useManualInput ? 'Using Manual' : 'Enter Manually'}
+                  </button>
+                )}
+              </div>
+
+              {/* Manual Input Mode or Not Connected */}
+              {(useManualInput || !isConnected) ? (
+                <div className="mb-4">
+                  <label className="block text-sm text-cro-muted mb-2">Enter your total CRO holdings:</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      value={manualCroInput}
+                      onChange={(e) => setManualCroInput(e.target.value)}
+                      placeholder="0"
+                      className="flex-1 px-4 py-3 text-lg font-mono bg-cro-dark border border-cro-border rounded-lg text-cro-text focus:outline-none focus:ring-2 focus:ring-cro-cyan focus:border-cro-cyan"
+                    />
+                    <span className="text-cro-muted font-medium">CRO</span>
+                  </div>
+                  {!isConnected && (
+                    <p className="text-xs text-cro-muted mt-2">Connect wallet to auto-detect holdings, or enter manually above.</p>
+                  )}
                 </div>
-                <div className="p-4 bg-cro-dark rounded-lg">
-                  <div className="text-sm text-cro-muted mb-1">In Positions</div>
-                  <div className="text-xl font-bold text-cro-text">{formatNumber(positionCro)} CRO</div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="p-4 bg-cro-dark rounded-lg">
+                    <div className="text-sm text-cro-muted mb-1">Wallet Balance</div>
+                    <div className="text-xl font-bold text-cro-text">{formatNumber(walletCro)} CRO</div>
+                  </div>
+                  <div className="p-4 bg-cro-dark rounded-lg">
+                    <div className="text-sm text-cro-muted mb-1">In Positions</div>
+                    <div className="text-xl font-bold text-cro-text">{formatNumber(positionCro)} CRO</div>
+                  </div>
+                  <div className="p-4 bg-cro-dark rounded-lg border border-cro-cyan/30">
+                    <div className="text-sm text-cro-muted mb-1">Total CRO</div>
+                    <div className="text-xl font-bold text-cro-cyan">{formatNumber(autoDetectedCro)} CRO</div>
+                  </div>
                 </div>
-                <div className="p-4 bg-cro-dark rounded-lg border border-cro-cyan/30">
+              )}
+
+              {/* Always show total when using manual input */}
+              {(useManualInput || !isConnected) && manualCro > 0 && (
+                <div className="mt-4 p-4 bg-cro-dark rounded-lg border border-cro-cyan/30">
                   <div className="text-sm text-cro-muted mb-1">Total CRO</div>
                   <div className="text-xl font-bold text-cro-cyan">{formatNumber(totalCro)} CRO</div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Value Calculator */}
@@ -261,7 +299,6 @@ export default function CropiumPage() {
               <p className="mt-1">Past performance doesn't guarantee future results. DYOR.</p>
             </div>
           </div>
-        )}
       </main>
     </div>
   );
