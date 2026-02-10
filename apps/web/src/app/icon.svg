@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="cro-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#002D74"/>
+      <stop offset="100%" stop-color="#001440"/>
+    </linearGradient>
+  </defs>
+  <!-- Outer hexagon -->
+  <path d="M16 1L3 8.5v15L16 31l13-7.5v-15L16 1z" fill="url(#cro-bg)"/>
+  <!-- Inner hexagon outline -->
+  <path d="M16 6L7 11v10l9 5 9-5V11L16 6z" fill="none" stroke="#00D4FF" stroke-width="1.5"/>
+  <!-- Center hexagon -->
+  <path d="M16 10l-5 2.9v5.8l5 2.9 5-2.9v-5.8L16 10z" fill="#002D74" stroke="#00D4FF" stroke-width="0.75"/>
+</svg>

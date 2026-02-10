@@ -29,26 +29,33 @@ export default function Home() {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-2 sm:gap-3">
               {/* CRO Logo */}
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-cro-cyan to-cro-navy flex items-center justify-center shadow-lg shadow-cro-cyan/20">
-                <svg viewBox="0 0 32 32" className="w-5 h-5 sm:w-6 sm:h-6" fill="none">
-                  <path
-                    d="M16 2L4 9v14l12 7 12-7V9L16 2z"
-                    fill="url(#cro-gradient)"
-                    stroke="#00D4FF"
-                    strokeWidth="1"
-                  />
-                  <path
-                    d="M16 8l-6 3.5v7L16 22l6-3.5v-7L16 8z"
-                    fill="#050B15"
-                    stroke="#00D4FF"
-                    strokeWidth="0.5"
-                  />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center">
+                <svg viewBox="0 0 32 32" className="w-8 h-8 sm:w-10 sm:h-10" fill="none">
                   <defs>
-                    <linearGradient id="cro-gradient" x1="4" y1="2" x2="28" y2="30">
+                    <linearGradient id="cro-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
                       <stop offset="0%" stopColor="#002D74" />
-                      <stop offset="100%" stopColor="#0B1426" />
+                      <stop offset="100%" stopColor="#001440" />
                     </linearGradient>
                   </defs>
+                  {/* Outer hexagon */}
+                  <path
+                    d="M16 1L3 8.5v15L16 31l13-7.5v-15L16 1z"
+                    fill="url(#cro-gradient)"
+                  />
+                  {/* Inner hexagon outline */}
+                  <path
+                    d="M16 6L7 11v10l9 5 9-5V11L16 6z"
+                    fill="none"
+                    stroke="#00D4FF"
+                    strokeWidth="1.5"
+                  />
+                  {/* Center hexagon */}
+                  <path
+                    d="M16 10l-5 2.9v5.8l5 2.9 5-2.9v-5.8L16 10z"
+                    fill="#002D74"
+                    stroke="#00D4FF"
+                    strokeWidth="0.75"
+                  />
                 </svg>
               </div>
               <div>

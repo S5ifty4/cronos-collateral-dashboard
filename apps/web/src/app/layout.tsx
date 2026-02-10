@@ -9,6 +9,9 @@ export const metadata: Metadata = {
   title: 'Cronos Collateral Dashboard',
   description: 'DeFi risk dashboard for Cronos lending protocols',
   viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
+  icons: {
+    icon: '/icon.svg',
+  },
 };
 
 export default function RootLayout({
