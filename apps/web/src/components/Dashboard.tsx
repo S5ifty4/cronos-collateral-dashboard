@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAccount } from 'wagmi';
+import { useRouter } from 'next/navigation';
 import type { ScenarioResult, CollateralPosition, BorrowPosition, ProtocolSnapshot, UnifiedPortfolio } from '@cronos-dash/shared';
 import { calculateRiskMetrics } from '@cronos-dash/shared';
 import type { SimulationData } from './ScenarioSimulator';
@@ -102,6 +103,7 @@ function createDemoPortfolio(prices: Record<string, number>, collateralAmount: n
 }
 
 export function Dashboard() {
+  const router = useRouter();
   const { address, isConnected } = useAccount();
   const [simulationData, setSimulationData] = useState<SimulationData | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -305,47 +307,64 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Loan Position Tabs - Only show when connected (not in demo mode) */}
+      {/* Positions Bar + CROpium - Only show when connected (not in demo mode) */}
       {!demoMode && loanPairs.length > 0 && (
-        <div className="bg-cro-card rounded-xl border border-cro-border p-2">
-          <div className="flex items-center gap-2 overflow-x-auto">
-            <span className="text-xs text-cro-muted px-2 whitespace-nowrap">Positions:</span>
-            {loanPairs.map((loan, idx) => (
-              <button
-                key={loan.id}
-                onClick={() => setSelectedLoanIndex(idx)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                  validSelectedIndex === idx
-                    ? 'bg-cro-cyan text-cro-dark'
-                    : 'bg-cro-dark text-cro-muted hover:text-cro-text hover:bg-cro-border'
-                }`}
-              >
-                {loan.label}
-              </button>
-            ))}
+        <div className="flex gap-4">
+          {/* Loan Position Tabs - 75% */}
+          <div className="flex-[3] bg-cro-card rounded-xl border border-cro-border p-2">
+            <div className="flex items-center gap-2 overflow-x-auto">
+              <span className="text-xs text-cro-muted px-2 whitespace-nowrap">Positions:</span>
+              {loanPairs.map((loan, idx) => (
+                <button
+                  key={loan.id}
+                  onClick={() => setSelectedLoanIndex(idx)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+                    validSelectedIndex === idx
+                      ? 'bg-cro-cyan text-cro-dark'
+                      : 'bg-cro-dark text-cro-muted hover:text-cro-text hover:bg-cro-border'
+                  }`}
+                >
+                  {loan.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* CROpium Banner - 25% */}
+          <div className="flex-1 bg-gradient-to-r from-purple-900/30 to-cro-card rounded-xl border border-purple-500/30 p-3 flex items-center justify-between">
+            <span className="text-sm text-purple-300 font-medium">Take a shot of CROpium</span>
+            <button
+              onClick={() => router.push('/cropium')}
+              className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-lg transition-colors"
+              title="Enter the CROpium Den"
+            >
+              💉
+            </button>
           </div>
         </div>
       )}
 
-      {/* Demo Mode Banner */}
+      {/* Demo Mode Banner + CROpium */}
       {demoMode && (
-        <div className="bg-cro-cyan/10 border border-cro-cyan rounded-lg p-3 sm:p-4">
-          <div className="flex items-center justify-between mb-3 sm:mb-4">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-cro-cyan/20 flex items-center justify-center">
-                <svg className="w-3 h-3 sm:w-4 sm:h-4 text-cro-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+        <div className="flex flex-col lg:flex-row gap-4">
+          {/* Demo Mode Controls - 75% */}
+          <div className="flex-[3] bg-cro-cyan/10 border border-cro-cyan rounded-lg p-3 sm:p-4">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-cro-cyan/20 flex items-center justify-center">
+                  <svg className="w-3 h-3 sm:w-4 sm:h-4 text-cro-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <p className="text-cro-cyan font-medium text-sm sm:text-base">Demo Mode</p>
               </div>
-              <p className="text-cro-cyan font-medium text-sm sm:text-base">Demo Mode</p>
+              <button
+                onClick={() => setDemoMode(false)}
+                className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm text-cro-cyan hover:bg-cro-cyan/10 rounded-lg transition-colors"
+              >
+                Exit Demo
+              </button>
             </div>
-            <button
-              onClick={() => setDemoMode(false)}
-              className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm text-cro-cyan hover:bg-cro-cyan/10 rounded-lg transition-colors"
-            >
-              Exit Demo
-            </button>
-          </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
             <div className="flex items-center justify-between sm:justify-start gap-2">
               <label className="text-xs sm:text-sm text-cro-muted whitespace-nowrap">Collateral:</label>
@@ -390,6 +409,19 @@ export function Dashboard() {
                 className="w-20 sm:w-24 px-2 sm:px-3 py-1.5 text-sm font-mono bg-cro-dark border border-cro-border rounded-lg text-cro-text focus:outline-none focus:ring-1 focus:ring-cro-cyan"
               />
             </div>
+          </div>
+          </div>
+
+          {/* CROpium Banner - 25% */}
+          <div className="flex-1 bg-gradient-to-r from-purple-900/30 to-cro-card rounded-xl border border-purple-500/30 p-4 flex flex-col items-center justify-center gap-3">
+            <span className="text-sm text-purple-300 font-medium text-center">Take a shot of CROpium</span>
+            <button
+              onClick={() => router.push('/cropium')}
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-2xl transition-colors"
+              title="Enter the CROpium Den"
+            >
+              💉
+            </button>
           </div>
         </div>
       )}
