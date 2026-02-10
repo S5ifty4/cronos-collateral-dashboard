@@ -309,9 +309,9 @@ export function Dashboard() {
     <div className="space-y-6">
       {/* Positions Bar + CROpium - Only show when connected (not in demo mode) */}
       {!demoMode && loanPairs.length > 0 && (
-        <div className="flex gap-4">
-          {/* Loan Position Tabs - 75% */}
-          <div className="flex-[3] bg-cro-card rounded-xl border border-cro-border p-2">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+          {/* Loan Position Tabs - spans 3 columns (aligns with Health Factor through Total Borrowed) */}
+          <div className="col-span-2 lg:col-span-3 bg-cro-card rounded-xl border border-cro-border p-2">
             <div className="flex items-center gap-2 overflow-x-auto">
               <span className="text-xs text-cro-muted px-2 whitespace-nowrap">Positions:</span>
               {loanPairs.map((loan, idx) => (
@@ -330,8 +330,8 @@ export function Dashboard() {
             </div>
           </div>
 
-          {/* CROpium Banner - 25% */}
-          <div className="flex-1 bg-gradient-to-r from-purple-900/30 to-cro-card rounded-xl border border-purple-500/30 p-3 flex items-center justify-between">
+          {/* CROpium Banner - spans 1 column (aligns with Total Collateral) */}
+          <div className="col-span-2 lg:col-span-1 bg-gradient-to-r from-purple-900/30 to-cro-card rounded-xl border border-purple-500/30 p-3 flex items-center justify-between">
             <span className="text-sm text-purple-300 font-medium">Take a shot of CROpium</span>
             <button
               onClick={() => router.push('/cropium')}
@@ -346,9 +346,9 @@ export function Dashboard() {
 
       {/* Demo Mode Banner + CROpium */}
       {demoMode && (
-        <div className="flex flex-col lg:flex-row gap-4">
-          {/* Demo Mode Controls - 75% */}
-          <div className="flex-[3] bg-cro-cyan/10 border border-cro-cyan rounded-lg p-3 sm:p-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+          {/* Demo Mode Controls - spans 3 columns (aligns with Health Factor through Total Borrowed) */}
+          <div className="col-span-2 lg:col-span-3 bg-cro-cyan/10 border border-cro-cyan rounded-lg p-3 sm:p-4">
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <div className="flex items-center gap-2 sm:gap-3">
                 <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-cro-cyan/20 flex items-center justify-center">
@@ -412,8 +412,8 @@ export function Dashboard() {
           </div>
           </div>
 
-          {/* CROpium Banner - 25% */}
-          <div className="flex-1 bg-gradient-to-r from-purple-900/30 to-cro-card rounded-xl border border-purple-500/30 p-4 flex flex-col items-center justify-center gap-3">
+          {/* CROpium Banner - spans 1 column (aligns with Total Collateral) */}
+          <div className="col-span-2 lg:col-span-1 bg-gradient-to-r from-purple-900/30 to-cro-card rounded-xl border border-purple-500/30 p-4 flex flex-col items-center justify-center gap-3">
             <span className="text-sm text-purple-300 font-medium text-center">Take a shot of CROpium</span>
             <button
               onClick={() => router.push('/cropium')}
