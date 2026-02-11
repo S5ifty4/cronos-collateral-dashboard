@@ -311,7 +311,7 @@ export function Dashboard() {
       {!demoMode && loanPairs.length > 0 && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
           {/* Loan Position Tabs - spans 3 columns (aligns with Health Factor through Total Borrowed) */}
-          <div className="col-span-2 lg:col-span-3 bg-cro-card rounded-xl border border-cro-border p-2">
+          <div className="col-span-2 lg:col-span-3 bg-cro-card rounded-xl border border-cro-border p-3 flex items-center">
             <div className="flex items-center gap-2 overflow-x-auto">
               <span className="text-xs text-cro-muted px-2 whitespace-nowrap">Positions:</span>
               {loanPairs.map((loan, idx) => (
@@ -366,12 +366,12 @@ export function Dashboard() {
               </button>
             </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-            <div className="flex items-center justify-between sm:justify-start gap-2">
-              <label className="text-xs sm:text-sm text-cro-muted whitespace-nowrap">Collateral:</label>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-cro-muted">Collateral</label>
               <select
                 value={demoAsset}
                 onChange={(e) => handleAssetChange(e.target.value)}
-                className="w-24 sm:w-28 px-2 sm:px-3 py-1.5 text-sm bg-cro-dark border border-cro-border rounded-lg text-cro-text focus:outline-none focus:ring-1 focus:ring-cro-cyan"
+                className="w-full px-3 py-2 text-sm bg-cro-dark border border-cro-border rounded-lg text-cro-text focus:outline-none focus:ring-1 focus:ring-cro-cyan"
               >
                 {COLLATERAL_OPTIONS.map((asset) => (
                   <option key={asset.symbol} value={asset.symbol}>
@@ -380,33 +380,33 @@ export function Dashboard() {
                 ))}
               </select>
             </div>
-            <div className="flex items-center justify-between sm:justify-start gap-2">
-              <label className="text-xs sm:text-sm text-cro-muted whitespace-nowrap">Amount:</label>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-cro-muted">Amount</label>
               <input
                 type="number"
                 value={demoCollateral || ''}
                 onChange={(e) => setDemoCollateral(e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value, 10) || 0))}
                 placeholder="0"
-                className="w-24 sm:w-28 px-2 sm:px-3 py-1.5 text-sm font-mono bg-cro-dark border border-cro-border rounded-lg text-cro-text focus:outline-none focus:ring-1 focus:ring-cro-cyan"
+                className="w-full px-3 py-2 text-sm font-mono bg-cro-dark border border-cro-border rounded-lg text-cro-text focus:outline-none focus:ring-1 focus:ring-cro-cyan"
               />
             </div>
-            <div className="flex items-center justify-between sm:justify-start gap-2">
-              <label className="text-xs sm:text-sm text-cro-muted whitespace-nowrap">USDC Borrowed:</label>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-cro-muted">USDC Borrowed</label>
               <input
                 type="number"
                 value={demoBorrowed || ''}
                 onChange={(e) => setDemoBorrowed(e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value, 10) || 0))}
                 placeholder="0"
-                className="w-24 sm:w-28 px-2 sm:px-3 py-1.5 text-sm font-mono bg-cro-dark border border-cro-border rounded-lg text-cro-text focus:outline-none focus:ring-1 focus:ring-cro-cyan"
+                className="w-full px-3 py-2 text-sm font-mono bg-cro-dark border border-cro-border rounded-lg text-cro-text focus:outline-none focus:ring-1 focus:ring-cro-cyan"
               />
             </div>
-            <div className="flex items-center justify-between sm:justify-start gap-2">
-              <label className="text-xs sm:text-sm text-cro-muted whitespace-nowrap">LT %:</label>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-cro-muted">LT %</label>
               <input
                 type="number"
                 value={demoLT}
                 onChange={(e) => setDemoLT(Math.min(100, Math.max(0, Number(e.target.value))))}
-                className="w-20 sm:w-24 px-2 sm:px-3 py-1.5 text-sm font-mono bg-cro-dark border border-cro-border rounded-lg text-cro-text focus:outline-none focus:ring-1 focus:ring-cro-cyan"
+                className="w-full px-3 py-2 text-sm font-mono bg-cro-dark border border-cro-border rounded-lg text-cro-text focus:outline-none focus:ring-1 focus:ring-cro-cyan"
               />
             </div>
           </div>
