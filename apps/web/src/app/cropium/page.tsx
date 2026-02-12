@@ -13,6 +13,10 @@ const PRICE_MILESTONES = [
   { label: '$2.71', value: 2.71 },
 ];
 
+// Market cap calculation constants
+const BNB_CIRCULATING_SUPPLY = 140_000_000; // ~140 million BNB
+const CRO_CIRCULATING_SUPPLY = 26_400_000_000; // ~26.4 billion CRO
+
 function formatNumber(n: number, decimals = 2): string {
   if (!isFinite(n)) return '0';
   return n.toLocaleString(undefined, {
@@ -58,6 +62,11 @@ export default function CropiumPage() {
   });
 
   const currentCroPrice = prices?.CRO || 0.09;
+  const currentBnbPrice = prices?.BNB || 600;
+
+  // Calculate CRO price if it had Binance's market cap
+  const bnbMarketCap = currentBnbPrice * BNB_CIRCULATING_SUPPLY;
+  const croAtBnbMarketCap = bnbMarketCap / CRO_CIRCULATING_SUPPLY;
 
   // Set initial simulated price to current price
   useEffect(() => {
@@ -290,6 +299,17 @@ export default function CropiumPage() {
                     {milestone.label}
                   </button>
                 ))}
+                <button
+                  onClick={() => handleMilestoneClick(croAtBnbMarketCap)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    Math.abs(simulatedPrice - croAtBnbMarketCap) < 0.01
+                      ? 'bg-yellow-500 text-cro-bg'
+                      : 'bg-cro-dark text-cro-muted hover:text-cro-text border border-yellow-500/50 hover:border-yellow-500'
+                  }`}
+                  title={`CRO at Binance market cap ($${formatNumber(bnbMarketCap / 1e9)}B)`}
+                >
+                  🔶 Binance MC (${croAtBnbMarketCap.toFixed(2)})
+                </button>
               </div>
             </div>
 
