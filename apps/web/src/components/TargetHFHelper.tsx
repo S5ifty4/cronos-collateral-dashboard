@@ -57,10 +57,10 @@ export function TargetHFHelper({
 
   // Preset targets as borrow limit % (lower = safer)
   const presets = [
-    { label: '75%', value: 75 },   // HF 1.33
-    { label: '50%', value: 50 },   // HF 2.0
+    { label: '25%', value: 25 },   // HF 4.0 - safest
     { label: '33%', value: 33 },   // HF 3.0
-    { label: '25%', value: 25 },   // HF 4.0
+    { label: '50%', value: 50 },   // HF 2.0
+    { label: '75%', value: 75 },   // HF 1.33 - riskiest
   ];
 
   return (
