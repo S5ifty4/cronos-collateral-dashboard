@@ -10,14 +10,23 @@ const fastify = Fastify({
 });
 
 async function main() {
-  // Register rate limiting
+  // Register rate limiting - per IP address
   await fastify.register(rateLimit, {
-    max: 100, // max 100 requests
+    max: 60, // max 60 requests per IP per minute
     timeWindow: '1 minute',
-    errorResponseBuilder: () => ({
+    keyGenerator: (request) => {
+      // Use X-Forwarded-For header if behind proxy (Vercel/Railway), otherwise use IP
+      const forwarded = request.headers['x-forwarded-for'];
+      if (forwarded) {
+        // X-Forwarded-For can be comma-separated, take the first (client) IP
+        return Array.isArray(forwarded) ? forwarded[0].split(',')[0].trim() : forwarded.split(',')[0].trim();
+      }
+      return request.ip;
+    },
+    errorResponseBuilder: (_request, context) => ({
       statusCode: 429,
       error: 'Too Many Requests',
-      message: 'Rate limit exceeded. Please try again later.',
+      message: `Rate limit exceeded. You have made ${context.max} requests in ${context.after}. Please try again later.`,
     }),
   });
 
