@@ -154,6 +154,26 @@ interface TectonicAdapterOptions {
   useMockData?: boolean;
 }
 
+// Portfolio cache to reduce RPC calls
+interface CachedPortfolio {
+  data: ProtocolSnapshot;
+  timestamp: number;
+}
+const portfolioCache = new Map<string, CachedPortfolio>();
+const PORTFOLIO_CACHE_TTL = 120000; // 2 minutes
+
+/**
+ * Clear expired portfolio cache entries
+ */
+function cleanupPortfolioCache() {
+  const now = Date.now();
+  for (const [address, cached] of portfolioCache.entries()) {
+    if (now - cached.timestamp > PORTFOLIO_CACHE_TTL) {
+      portfolioCache.delete(address);
+    }
+  }
+}
+
 /**
  * Fetch portfolio data from Tectonic protocol
  * Reads actual on-chain data from Tectonic contracts on Cronos mainnet.
@@ -166,6 +186,22 @@ export async function fetchTectonicPortfolio(
   // Allow fallback to mock data for testing
   if (options.useMockData === true) {
     return getMockPortfolio(address, prices);
+  }
+
+  // Check portfolio cache
+  const cacheKey = address.toLowerCase();
+  const now = Date.now();
+  const cached = portfolioCache.get(cacheKey);
+
+  if (cached && now - cached.timestamp < PORTFOLIO_CACHE_TTL) {
+    console.log(`Using cached portfolio for ${address}`);
+    // Update values with current prices (cache structure, recalc USD values)
+    return recalculatePortfolioWithPrices(cached.data, prices);
+  }
+
+  // Cleanup old cache entries periodically
+  if (portfolioCache.size > 100) {
+    cleanupPortfolioCache();
   }
 
   try {
@@ -315,13 +351,19 @@ export async function fetchTectonicPortfolio(
     const TECTONIC_SAFETY_FACTOR = 0.58;
     risk.availableBorrowUsd = protocolShortfall > 0 ? 0 : protocolAvailableBorrow * TECTONIC_SAFETY_FACTOR;
 
-    return {
+    const snapshot: ProtocolSnapshot = {
       protocol: 'tectonic',
       collaterals,
       borrows,
       totals,
       risk,
     };
+
+    // Cache the portfolio
+    portfolioCache.set(cacheKey, { data: snapshot, timestamp: now });
+    console.log(`Cached portfolio for ${address}`);
+
+    return snapshot;
   } catch (error) {
     console.error('Error fetching Tectonic portfolio:', error);
     // Return empty portfolio on error rather than throwing
@@ -339,6 +381,47 @@ export async function fetchTectonicPortfolio(
       },
     };
   }
+}
+
+/**
+ * Recalculate portfolio USD values with current prices
+ * Used when returning cached portfolio data with fresh prices
+ */
+function recalculatePortfolioWithPrices(
+  snapshot: ProtocolSnapshot,
+  prices: Record<string, number>
+): ProtocolSnapshot {
+  // Update collateral values
+  const collaterals: CollateralPosition[] = snapshot.collaterals.map((c) => ({
+    ...c,
+    valueUsd: c.amount * (prices[c.asset.symbol] || 0),
+  }));
+
+  // Update borrow values
+  const borrows: BorrowPosition[] = snapshot.borrows.map((b) => ({
+    ...b,
+    valueUsd: b.amount * (prices[b.asset.symbol] || 1),
+  }));
+
+  // Recalculate totals
+  const totals = {
+    collateralUsd: collaterals.reduce((sum, c) => sum + c.valueUsd, 0),
+    borrowUsd: borrows.reduce((sum, b) => sum + b.valueUsd, 0),
+    weightedCollateralUsd: collaterals
+      .filter((c) => c.enabled)
+      .reduce((sum, c) => sum + c.valueUsd * c.liquidationThreshold, 0),
+  };
+
+  // Recalculate risk with new prices
+  const risk = calculateRiskMetrics(collaterals, borrows, prices);
+
+  return {
+    ...snapshot,
+    collaterals,
+    borrows,
+    totals,
+    risk,
+  };
 }
 
 /**
