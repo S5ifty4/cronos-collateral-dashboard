@@ -1,4 +1,4 @@
-import { createPublicClient, http, formatUnits } from 'viem';
+import { createPublicClient, http, formatUnits, type PublicClient } from 'viem';
 import { cronos } from 'viem/chains';
 import type {
   ProtocolSnapshot,
@@ -7,7 +7,7 @@ import type {
   AssetMeta,
 } from '@cronos-dash/shared';
 import { calculateRiskMetrics } from '@cronos-dash/shared';
-import { config, TECTONIC_ADDRESSES, ASSETS } from '../config.js';
+import { config, TECTONIC_ADDRESSES, ASSETS, CRONOS_RPC_URLS } from '../config.js';
 
 // Comptroller ABI for reading account data
 const COMPTROLLER_ABI = [
@@ -126,10 +126,45 @@ const ERC20_ABI = [
   },
 ] as const;
 
-const client = createPublicClient({
-  chain: cronos,
-  transport: http(config.cronosRpcUrl),
-});
+// Create clients for each RPC endpoint
+const rpcClients: PublicClient[] = CRONOS_RPC_URLS.map((url) =>
+  createPublicClient({
+    chain: cronos,
+    transport: http(url),
+  })
+);
+
+// Track which RPC is currently preferred (rotates on failure)
+let preferredRpcIndex = 0;
+
+/**
+ * Get a working RPC client, trying fallbacks on failure
+ */
+async function getWorkingClient(): Promise<PublicClient> {
+  // Try preferred client first, then rotate through others
+  for (let i = 0; i < rpcClients.length; i++) {
+    const index = (preferredRpcIndex + i) % rpcClients.length;
+    const client = rpcClients[index];
+    try {
+      // Quick health check - get block number
+      await client.getBlockNumber();
+      if (i > 0) {
+        // We had to fall back, update preferred
+        console.log(`RPC fallback: switched to ${CRONOS_RPC_URLS[index]}`);
+        preferredRpcIndex = index;
+      }
+      return client;
+    } catch (error) {
+      console.warn(`RPC ${CRONOS_RPC_URLS[index]} failed, trying next...`);
+    }
+  }
+  // All failed, return first and let the caller handle the error
+  console.error('All RPC endpoints failed, using primary');
+  return rpcClients[0];
+}
+
+// Default client for backward compatibility
+const client = rpcClients[0];
 
 // Map tToken addresses to asset info
 const TTOKEN_MAP: Record<string, { symbol: string; underlyingDecimals: number }> = {
@@ -207,8 +242,11 @@ export async function fetchTectonicPortfolio(
   try {
     const userAddress = address as `0x${string}`;
 
+    // Get a working RPC client (with fallback support)
+    const rpcClient = await getWorkingClient();
+
     // Get markets the user has entered (enabled as collateral)
-    const assetsIn = await client.readContract({
+    const assetsIn = await rpcClient.readContract({
       address: TECTONIC_ADDRESSES.comptroller,
       abi: COMPTROLLER_ABI,
       functionName: 'getAssetsIn',
@@ -219,7 +257,7 @@ export async function fetchTectonicPortfolio(
     console.log(`User ${address} has entered markets:`, Array.from(enabledMarkets));
 
     // Get account liquidity from Comptroller (this gives us the protocol's actual available borrow)
-    const accountLiquidity = await client.readContract({
+    const accountLiquidity = await rpcClient.readContract({
       address: TECTONIC_ADDRESSES.comptroller,
       abi: COMPTROLLER_ABI,
       functionName: 'getAccountLiquidity',
@@ -240,24 +278,24 @@ export async function fetchTectonicPortfolio(
 
       // Fetch tToken balance, borrow balance, exchange rate, and collateral factor in parallel
       const [tTokenBalance, borrowBalance, exchangeRate, marketInfo] = await Promise.all([
-        client.readContract({
+        rpcClient.readContract({
           address: tToken,
           abi: TTOKEN_ABI,
           functionName: 'balanceOf',
           args: [userAddress],
         }),
-        client.readContract({
+        rpcClient.readContract({
           address: tToken,
           abi: TTOKEN_ABI,
           functionName: 'borrowBalanceStored',
           args: [userAddress],
         }),
-        client.readContract({
+        rpcClient.readContract({
           address: tToken,
           abi: TTOKEN_ABI,
           functionName: 'exchangeRateStored',
         }),
-        client.readContract({
+        rpcClient.readContract({
           address: TECTONIC_ADDRESSES.comptroller,
           abi: COMPTROLLER_ABI,
           functionName: 'markets',

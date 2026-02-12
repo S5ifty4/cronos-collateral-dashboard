@@ -5,6 +5,14 @@ export const config = {
   corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:3000',
 };
 
+// Cronos RPC endpoints with fallbacks
+export const CRONOS_RPC_URLS = [
+  config.cronosRpcUrl,
+  'https://evm.cronos.org',
+  'https://cronos-evm-rpc.publicnode.com',
+  'https://rpc.vvs.finance',
+].filter((url, index, self) => self.indexOf(url) === index); // Remove duplicates
+
 // Tectonic contract addresses on Cronos mainnet
 export const TECTONIC_ADDRESSES = {
   comptroller: '0xb3831584acb95ED9cCb0C11f677B5AD01DeaeEc0' as const,
