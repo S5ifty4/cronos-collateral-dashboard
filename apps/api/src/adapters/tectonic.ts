@@ -9,9 +9,9 @@ import type {
 import { calculateRiskMetrics } from '@cronos-dash/shared';
 import { config, TECTONIC_ADDRESSES, ASSETS, CRONOS_RPC_URLS } from '../config.js';
 
-// Safety factor to match Tectonic UI's available borrow display
-// Tectonic UI shows ~58% of raw getAccountLiquidity() value
-const TECTONIC_SAFETY_FACTOR = 0.58;
+// Tectonic's max LTV (Loan-to-Value) is 63%
+// Available borrow = (Collateral * Max_LTV) - Current Borrowed
+const TECTONIC_MAX_LTV = 0.63;
 
 // Comptroller ABI for reading account data
 const COMPTROLLER_ABI = [
@@ -386,10 +386,11 @@ export async function fetchTectonicPortfolio(
         .reduce((sum, c) => sum + c.valueUsd * c.liquidationThreshold, 0),
     };
 
-    // Calculate risk metrics, but override availableBorrowUsd with protocol's value
+    // Calculate risk metrics, but override availableBorrowUsd with max LTV calculation
     const risk = calculateRiskMetrics(collaterals, borrows, prices);
-    // Use the protocol's available borrow with safety factor to match Tectonic UI
-    risk.availableBorrowUsd = protocolShortfall > 0 ? 0 : protocolAvailableBorrow * TECTONIC_SAFETY_FACTOR;
+    // Available borrow based on Tectonic's max LTV of 63%
+    const maxBorrowAllowed = totals.collateralUsd * TECTONIC_MAX_LTV;
+    risk.availableBorrowUsd = protocolShortfall > 0 ? 0 : Math.max(0, maxBorrowAllowed - totals.borrowUsd);
 
     const snapshot: ProtocolSnapshot = {
       protocol: 'tectonic',
@@ -455,9 +456,9 @@ function recalculatePortfolioWithPrices(
   // Recalculate risk with new prices
   const risk = calculateRiskMetrics(collaterals, borrows, prices);
 
-  // Apply safety factor to available borrow to match Tectonic display
-  const rawAvailableBorrow = Math.max(0, totals.weightedCollateralUsd - totals.borrowUsd);
-  risk.availableBorrowUsd = rawAvailableBorrow * TECTONIC_SAFETY_FACTOR;
+  // Available borrow based on Tectonic's max LTV of 63%
+  const maxBorrowAllowed = totals.collateralUsd * TECTONIC_MAX_LTV;
+  risk.availableBorrowUsd = Math.max(0, maxBorrowAllowed - totals.borrowUsd);
 
   return {
     ...snapshot,
