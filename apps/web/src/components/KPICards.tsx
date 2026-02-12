@@ -1,7 +1,5 @@
 'use client';
 
-import { calculateBufferPercentage } from '@cronos-dash/shared';
-
 interface KPICardsProps {
   healthFactor: number | null;
   liquidationPrice: number;
@@ -9,6 +7,25 @@ interface KPICardsProps {
   totalBorrowUsd: number;
   totalCollateralUsd: number;
   collateralSymbol?: string;
+}
+
+/**
+ * Calculate Borrow Limit Used % (inverse of Health Factor)
+ * This matches Tectonic's display - higher % = more risk
+ * At 100% you get liquidated
+ */
+function calculateBorrowLimitUsed(healthFactor: number | null): number {
+  if (healthFactor === null || !isFinite(healthFactor) || healthFactor <= 0) return 0;
+  return Math.min(100, (1 / healthFactor) * 100);
+}
+
+/**
+ * Calculate LTV (Loan-to-Value) percentage
+ * LTV = Total Borrowed / Total Collateral * 100
+ */
+function calculateLTV(totalBorrowUsd: number, totalCollateralUsd: number): number {
+  if (totalCollateralUsd <= 0) return 0;
+  return (totalBorrowUsd / totalCollateralUsd) * 100;
 }
 
 function formatNumber(n: number | null | undefined, decimals = 2): string {
@@ -23,19 +40,21 @@ function formatUsd(n: number): string {
   return `$${formatNumber(n)}`;
 }
 
-function getHFColor(hf: number | null | undefined): string {
-  if (hf === null || hf === undefined || !isFinite(hf)) return 'text-cro-success';
-  if (hf >= 2) return 'text-cro-success';
-  if (hf >= 1.5) return 'text-cro-warning';
-  if (hf >= 1.1) return 'text-orange-500';
+/**
+ * Color based on Borrow Limit Used % (higher = more danger)
+ * <50% = safe (green), 50-67% = caution (yellow), 67-90% = warning (orange), >90% = danger (red)
+ */
+function getBorrowLimitColor(borrowLimitUsed: number): string {
+  if (borrowLimitUsed < 50) return 'text-cro-success';
+  if (borrowLimitUsed < 67) return 'text-cro-warning';
+  if (borrowLimitUsed < 90) return 'text-orange-500';
   return 'text-cro-danger';
 }
 
-function getHFBorderColor(hf: number | null | undefined): string {
-  if (hf === null || hf === undefined || !isFinite(hf)) return 'border-cro-success/50';
-  if (hf >= 2) return 'border-cro-success/50';
-  if (hf >= 1.5) return 'border-cro-warning/50';
-  if (hf >= 1.1) return 'border-orange-500/50';
+function getBorrowLimitBorderColor(borrowLimitUsed: number): string {
+  if (borrowLimitUsed < 50) return 'border-cro-success/50';
+  if (borrowLimitUsed < 67) return 'border-cro-warning/50';
+  if (borrowLimitUsed < 90) return 'border-orange-500/50';
   return 'border-cro-danger/50';
 }
 
@@ -47,7 +66,8 @@ export function KPICards({
   totalCollateralUsd,
   collateralSymbol = 'CRO',
 }: KPICardsProps) {
-  const buffer = calculateBufferPercentage(healthFactor ?? Infinity);
+  const borrowLimitUsed = calculateBorrowLimitUsed(healthFactor);
+  const ltv = calculateLTV(totalBorrowUsd, totalCollateralUsd);
   const priceBuffer =
     currentPrice > 0
       ? ((currentPrice - liquidationPrice) / currentPrice) * 100
@@ -55,18 +75,18 @@ export function KPICards({
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
-      {/* Health Factor */}
+      {/* Borrow Limit Used (Risk Level) */}
       <div
-        className={`p-3 sm:p-4 rounded-xl border-2 bg-cro-card ${getHFBorderColor(healthFactor)}`}
+        className={`p-3 sm:p-4 rounded-xl border-2 bg-cro-card ${getBorrowLimitBorderColor(borrowLimitUsed)}`}
       >
         <div className="text-xs sm:text-sm font-medium text-cro-muted mb-1">
-          Health Factor
+          Borrow Limit Used
         </div>
-        <div className={`text-xl sm:text-3xl font-bold ${getHFColor(healthFactor)}`}>
-          {formatNumber(healthFactor)}
+        <div className={`text-xl sm:text-3xl font-bold ${getBorrowLimitColor(borrowLimitUsed)}`}>
+          {formatNumber(borrowLimitUsed, 1)}%
         </div>
         <div className="text-xs text-cro-muted mt-1 hidden sm:block">
-          Buffer: {formatNumber(buffer, 1)}%
+          LTV: {formatNumber(ltv, 2)}%
         </div>
       </div>
 

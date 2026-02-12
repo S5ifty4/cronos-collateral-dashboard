@@ -18,71 +18,93 @@ function formatNumber(n: number, decimals = 2): string {
   });
 }
 
+// Convert Borrow Limit Used % to Health Factor
+function percentToHF(percent: number): number {
+  if (percent <= 0) return Infinity;
+  return 100 / percent;
+}
+
+// Convert Health Factor to Borrow Limit Used %
+function hfToPercent(hf: number): number {
+  if (!isFinite(hf) || hf <= 0) return 100;
+  return Math.min(100, (1 / hf) * 100);
+}
+
 export function TargetHFHelper({
   snapshot,
   prices,
   currentHF,
 }: TargetHFHelperProps) {
-  const [targetHF, setTargetHF] = useState(1.5);
+  // Store as target borrow limit % (lower = safer)
+  const [targetPercent, setTargetPercent] = useState(50); // 50% = HF 2.0
   const [result, setResult] = useState<{
     repayAmount?: { symbol: string; amount: number };
     addCollateralAmount?: { symbol: string; amount: number };
   } | null>(null);
 
+  const currentPercent = hfToPercent(currentHF);
+  const targetHF = percentToHF(targetPercent);
+
   useEffect(() => {
-    if (targetHF <= currentHF) {
+    // Target must be lower (safer) than current to show suggestions
+    if (targetPercent >= currentPercent) {
       setResult(null);
       return;
     }
     const calculated = calculateTargetHF({ targetHF, snapshot, prices });
     setResult(calculated);
-  }, [targetHF, snapshot, prices, currentHF]);
+  }, [targetPercent, currentPercent, targetHF, snapshot, prices]);
 
-  const presets = [1.3, 1.5, 2.0, 3.0];
+  // Preset targets as borrow limit % (lower = safer)
+  const presets = [
+    { label: '75%', value: 75 },   // HF 1.33
+    { label: '50%', value: 50 },   // HF 2.0
+    { label: '33%', value: 33 },   // HF 3.0
+    { label: '25%', value: 25 },   // HF 4.0
+  ];
 
   return (
     <div className="bg-cro-card rounded-xl border border-cro-border p-4">
-      <h3 className="font-semibold text-cro-text mb-4">Target Health Factor</h3>
+      <h3 className="font-semibold text-cro-text mb-4">Target Borrow Limit</h3>
 
       <div className="mb-4">
         <div className="flex justify-between mb-2">
           <label className="text-sm font-medium text-cro-text">
-            Target HF
+            Target Borrow Limit
           </label>
           <span className="text-sm font-mono text-cro-cyan font-bold">
-            {formatNumber(targetHF)}
+            {formatNumber(targetPercent, 0)}%
           </span>
         </div>
         <input
           type="range"
-          min="1.1"
-          max="5"
-          step="0.1"
-          value={targetHF}
-          onChange={(e) => setTargetHF(Number(e.target.value))}
+          min="10"
+          max="90"
+          step="1"
+          value={targetPercent}
+          onChange={(e) => setTargetPercent(Number(e.target.value))}
           className="w-full h-2 bg-cro-border rounded-lg appearance-none cursor-pointer"
         />
         <div className="flex justify-center gap-2 mt-2">
           {presets.map((preset) => (
             <button
-              key={preset}
-              onClick={() => setTargetHF(preset)}
+              key={preset.value}
+              onClick={() => setTargetPercent(preset.value)}
               className={`px-3 py-1 text-xs rounded-full border transition-colors ${
-                targetHF === preset
+                targetPercent === preset.value
                   ? 'bg-cro-cyan text-cro-bg border-cro-cyan'
                   : 'bg-cro-card text-cro-muted border-cro-border hover:border-cro-cyan hover:text-cro-cyan'
               }`}
             >
-              {preset}x
+              {preset.label}
             </button>
           ))}
         </div>
       </div>
 
-      {targetHF <= currentHF ? (
+      {targetPercent >= currentPercent ? (
         <div className="p-3 bg-cro-success/10 border border-cro-success/30 rounded-lg text-sm text-cro-success">
-          Your current HF ({formatNumber(currentHF)}) is already at or above
-          target.
+          Your current borrow limit ({formatNumber(currentPercent, 1)}%) is already at or below target.
         </div>
       ) : result ? (
         <div className="space-y-3">
