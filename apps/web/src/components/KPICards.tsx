@@ -75,12 +75,12 @@ export function KPICards({
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
-      {/* Borrow Limit Used (Risk Level) */}
+      {/* Health Factor */}
       <div
         className={`p-3 sm:p-4 rounded-xl border-2 bg-cro-card ${getBorrowLimitBorderColor(borrowLimitUsed)}`}
       >
         <div className="text-xs sm:text-sm font-medium text-cro-muted mb-1">
-          Borrow Limit Used
+          Health Factor
         </div>
         <div className={`text-xl sm:text-3xl font-bold ${getBorrowLimitColor(borrowLimitUsed)}`}>
           {formatNumber(borrowLimitUsed, 1)}%

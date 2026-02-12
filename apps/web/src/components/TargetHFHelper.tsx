@@ -65,12 +65,12 @@ export function TargetHFHelper({
 
   return (
     <div className="bg-cro-card rounded-xl border border-cro-border p-4">
-      <h3 className="font-semibold text-cro-text mb-4">Target Borrow Limit</h3>
+      <h3 className="font-semibold text-cro-text mb-4">Target HF</h3>
 
       <div className="mb-4">
         <div className="flex justify-between mb-2">
           <label className="text-sm font-medium text-cro-text">
-            Target Borrow Limit
+            Target HF
           </label>
           <span className="text-sm font-mono text-cro-cyan font-bold">
             {formatNumber(targetPercent, 0)}%
@@ -104,7 +104,7 @@ export function TargetHFHelper({
 
       {targetPercent >= currentPercent ? (
         <div className="p-3 bg-cro-success/10 border border-cro-success/30 rounded-lg text-sm text-cro-success">
-          Your current borrow limit ({formatNumber(currentPercent, 1)}%) is already at or below target.
+          Your current HF ({formatNumber(currentPercent, 1)}%) is already at or below target.
         </div>
       ) : result ? (
         <div className="space-y-3">
