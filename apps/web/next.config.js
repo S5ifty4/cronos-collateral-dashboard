@@ -37,8 +37,10 @@ const securityHeaders = [
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
-      // Scripts: self + wagmi/WalletConnect use inline blobs
-      "script-src 'self' 'unsafe-eval' blob:",
+      // Scripts: Next.js App Router requires 'unsafe-inline' for its webpack
+      // bootstrap runtime. 'unsafe-eval' is needed by wagmi/WalletConnect.
+      // Note: to remove 'unsafe-inline' you'd need nonce-based CSP via middleware.
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:",
       // Styles: self + inline (Tailwind inlines at build time)
       "style-src 'self' 'unsafe-inline'",
       // Images: self + data URIs + cryptologos.cc (used in app)
