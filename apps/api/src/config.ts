@@ -16,7 +16,7 @@ export const CRONOS_RPC_URLS = [
 // Tectonic contract addresses on Cronos mainnet
 export const TECTONIC_ADDRESSES = {
   comptroller: '0xb3831584acb95ED9cCb0C11f677B5AD01DeaeEc0' as const,
-  priceOracle: '0xD4E0C9d5E1e2a8E2B7e5E1A7B5C3d3A5E1D4E0C9' as const, // Placeholder
+  // priceOracle: not used yet — add real address before enabling oracle-dependent features
   tCRO: '0xeAdf7c01DA7E93FdB5f16B0aa9ee85f978e89E95' as const,
   tUSDC: '0xB3bbf1bE947b245Aef26e3B6a9D777d7703F4c8e' as const,
   tETH: '0x543F4Db9BD26C9Eb6aD4DD1C33522c966C625774' as const,

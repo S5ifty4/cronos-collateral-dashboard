@@ -170,29 +170,33 @@ export function ConnectWallet() {
               </button>
             </div>
 
-            {/* Wallet Options Grid */}
-            <div className="p-4 grid grid-cols-2 gap-3">
-              {/* Crypto.com Onchain */}
-              {injectedConnector && (
-                <button
-                  onClick={() => handleConnect(injectedConnector)}
-                  disabled={isPending}
-                  className="flex flex-col items-center gap-3 p-4 bg-cro-dark border border-cro-border rounded-xl hover:border-cro-cyan/50 hover:bg-cro-cyan/5 transition-all disabled:opacity-50"
-                >
-                  {WalletIcons.CryptoComWallet}
-                  <span className="text-sm text-cro-text">Crypto.com Onchain</span>
-                </button>
-              )}
+            {/* Read-only notice */}
+            <div className="mx-4 mt-4 flex items-start gap-2 p-3 bg-cro-success/10 border border-cro-success/30 rounded-lg">
+              <svg className="w-4 h-4 text-cro-success mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              <p className="text-xs text-cro-success leading-relaxed">
+                <span className="font-semibold">Read-only access.</span> This app only reads your wallet address to fetch on-chain data. It cannot initiate transactions, move funds, or request signatures.
+              </p>
+            </div>
 
-              {/* MetaMask */}
+            {/* Wallet Options */}
+            <div className="p-4 flex flex-col gap-3">
+              {/* Browser / Injected wallet (MetaMask, Crypto.com Onchain, etc.) */}
               {injectedConnector && (
                 <button
                   onClick={() => handleConnect(injectedConnector)}
                   disabled={isPending}
-                  className="flex flex-col items-center gap-3 p-4 bg-cro-dark border border-cro-border rounded-xl hover:border-cro-cyan/50 hover:bg-cro-cyan/5 transition-all disabled:opacity-50"
+                  className="flex items-center gap-4 p-4 bg-cro-dark border border-cro-border rounded-xl hover:border-cro-cyan/50 hover:bg-cro-cyan/5 transition-all disabled:opacity-50 text-left"
                 >
-                  {WalletIcons.MetaMask}
-                  <span className="text-sm text-cro-text">MetaMask</span>
+                  <div className="flex gap-2">
+                    {WalletIcons.CryptoComWallet}
+                    {WalletIcons.MetaMask}
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-cro-text">Browser Wallet</div>
+                    <div className="text-xs text-cro-muted">MetaMask, Crypto.com Onchain, or any injected wallet</div>
+                  </div>
                 </button>
               )}
 
@@ -201,22 +205,15 @@ export function ConnectWallet() {
                 <button
                   onClick={() => handleConnect(walletConnectConnector)}
                   disabled={isPending}
-                  className="flex flex-col items-center gap-3 p-4 bg-cro-dark border border-cro-border rounded-xl hover:border-cro-cyan/50 hover:bg-cro-cyan/5 transition-all disabled:opacity-50"
+                  className="flex items-center gap-4 p-4 bg-cro-dark border border-cro-border rounded-xl hover:border-cro-cyan/50 hover:bg-cro-cyan/5 transition-all disabled:opacity-50 text-left"
                 >
-                  {WalletIcons.WalletConnect}
-                  <span className="text-sm text-cro-text">WalletConnect</span>
-                </button>
-              )}
-
-              {/* Browser Wallet (fallback) */}
-              {injectedConnector && (
-                <button
-                  onClick={() => handleConnect(injectedConnector)}
-                  disabled={isPending}
-                  className="flex flex-col items-center gap-3 p-4 bg-cro-dark border border-cro-border rounded-xl hover:border-cro-cyan/50 hover:bg-cro-cyan/5 transition-all disabled:opacity-50"
-                >
-                  {WalletIcons.BrowserWallet}
-                  <span className="text-sm text-cro-text">Browser Wallet</span>
+                  <div className="w-8 h-8 flex items-center justify-center">
+                    {WalletIcons.WalletConnect}
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-cro-text">WalletConnect</div>
+                    <div className="text-xs text-cro-muted">Scan QR code with any mobile wallet</div>
+                  </div>
                 </button>
               )}
             </div>

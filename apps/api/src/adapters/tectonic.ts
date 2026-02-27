@@ -291,7 +291,9 @@ export async function fetchTectonicPortfolio(
         rpcClient.readContract({
           address: tToken,
           abi: TTOKEN_ABI,
-          functionName: 'borrowBalanceStored',
+          // borrowBalanceCurrent accrues interest to the current block,
+          // giving a more accurate (never understated) debt figure
+          functionName: 'borrowBalanceCurrent',
           args: [userAddress],
         }),
         rpcClient.readContract({
