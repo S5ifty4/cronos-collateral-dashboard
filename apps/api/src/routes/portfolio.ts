@@ -1,12 +1,12 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
-import type { UnifiedPortfolio } from '@cronos-dash/shared';
-import { fetchTectonicPortfolio, fetchPrices } from '../adapters/tectonic.js';
+import type { UnifiedPortfolio, ProtocolSnapshot } from '@cronos-dash/shared';
+import { adapters, fetchPrices } from '../adapters/index.js';
 
 const addressSchema = z.string().regex(/^0x[a-fA-F0-9]{40}$/);
 
 export const portfolioRoutes: FastifyPluginAsync = async (fastify) => {
-  // Prices endpoint for demo mode
+  // Prices endpoint
   fastify.get('/prices', {
     handler: async () => {
       const prices = await fetchPrices();
@@ -30,27 +30,47 @@ export const portfolioRoutes: FastifyPluginAsync = async (fastify) => {
       const { address } = request.query;
 
       try {
-        // Validate address
         const validAddress = addressSchema.parse(address);
-
-        // Fetch current prices
         const prices = await fetchPrices();
 
-        // Fetch portfolio from Tectonic
-        const tectonicSnapshot = await fetchTectonicPortfolio(
-          validAddress,
-          prices
+        // Run all adapters in parallel; failed adapters are skipped
+        const results = await Promise.allSettled(
+          adapters.map((adapter) => adapter.fetchPortfolio(validAddress, prices))
         );
 
-        // Build unified portfolio (MVP: just Tectonic)
+        const snapshots: ProtocolSnapshot[] = [];
+        for (let i = 0; i < results.length; i++) {
+          const result = results[i];
+          if (result.status === 'fulfilled') {
+            snapshots.push(result.value);
+          } else {
+            fastify.log.error(
+              { adapter: adapters[i].name, err: result.reason },
+              'Adapter failed — skipping'
+            );
+          }
+        }
+
+        // Unified totals = sum across all protocol snapshots
+        const totalCollateralUsd = snapshots.reduce((s, p) => s + p.totals.collateralUsd, 0);
+        const totalBorrowUsd = snapshots.reduce((s, p) => s + p.totals.borrowUsd, 0);
+        const totalWeightedCollateralUsd = snapshots.reduce(
+          (s, p) => s + p.totals.weightedCollateralUsd,
+          0
+        );
+        const healthFactor =
+          totalBorrowUsd === 0
+            ? Infinity
+            : totalWeightedCollateralUsd / totalBorrowUsd;
+
         const portfolio: UnifiedPortfolio = {
           address: validAddress,
-          snapshots: [tectonicSnapshot],
+          snapshots,
           unified: {
-            totalCollateralUsd: tectonicSnapshot.totals.collateralUsd,
-            totalBorrowUsd: tectonicSnapshot.totals.borrowUsd,
-            totalWeightedCollateralUsd: tectonicSnapshot.totals.weightedCollateralUsd,
-            healthFactor: tectonicSnapshot.risk.healthFactor,
+            totalCollateralUsd,
+            totalBorrowUsd,
+            totalWeightedCollateralUsd,
+            healthFactor,
           },
           prices,
           timestamp: Date.now(),
