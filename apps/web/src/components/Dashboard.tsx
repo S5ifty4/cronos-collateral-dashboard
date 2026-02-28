@@ -12,8 +12,6 @@ import { KPICards } from './KPICards';
 import { PositionTables } from './PositionTables';
 import { ScenarioSimulator } from './ScenarioSimulator';
 import { TargetHFHelper } from './TargetHFHelper';
-import { HealthChart } from './HealthChart';
-import { useHealthHistory } from '@/hooks/useHealthHistory';
 
 // Fallback prices for demo mode (used if API fails)
 const FALLBACK_PRICES: Record<string, number> = {
@@ -155,11 +153,6 @@ export function Dashboard() {
   const demoPrices = livePrices || FALLBACK_PRICES;
   const demoPortfolio = demoMode ? createDemoPortfolio(demoPrices, demoCollateral, demoBorrowed, demoLT, demoAsset) : null;
   const activePortfolio = demoMode ? demoPortfolio : portfolio;
-
-  const { snapshots: healthSnapshots } = useHealthHistory(
-    demoMode ? undefined : address,
-    demoMode ? undefined : portfolio
-  );
 
   // Show loading placeholder during SSR to avoid hydration mismatch
   if (!mounted) {
@@ -442,11 +435,6 @@ export function Dashboard() {
         totalCollateralUsd={displayCollateral}
         collateralSymbol={collateralSymbol}
       />
-
-      {/* Health Factor History Chart */}
-      {!demoMode && healthSnapshots.length >= 2 && (
-        <HealthChart snapshots={healthSnapshots} currentHF={displayHF} />
-      )}
 
       {/* Position Tables */}
       <PositionTables
