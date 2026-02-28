@@ -43,8 +43,8 @@ const securityHeaders = [
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:",
       // Styles: self + inline (Tailwind inlines at build time)
       "style-src 'self' 'unsafe-inline'",
-      // Images: self + data URIs + cryptologos.cc (used in app)
-      "img-src 'self' data: https://cryptologos.cc",
+      // Images: self + data URIs + cryptologos.cc + WalletConnect explorer (wallet icons)
+      "img-src 'self' data: blob: https://cryptologos.cc https://explorer-api.walletconnect.com https://registry.walletconnect.com https://walletconnect.com https://*.walletconnect.com https://*.walletconnect.org",
       // Fonts: self
       "font-src 'self'",
       // API calls + Cronos RPC + WalletConnect + CoinGecko prices
@@ -61,6 +61,9 @@ const securityHeaders = [
         'https://verify.walletconnect.com',
         'https://verify.walletconnect.org',
         'https://explorer-api.walletconnect.com',
+        'https://registry.walletconnect.com',
+        'https://*.walletconnect.com',
+        'https://*.walletconnect.org',
       ].join(' '),
       // Frames: deny all
       "frame-src 'none'",
