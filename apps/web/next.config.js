@@ -43,8 +43,9 @@ const securityHeaders = [
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:",
       // Styles: self + inline (Tailwind inlines at build time)
       "style-src 'self' 'unsafe-inline'",
-      // Images: self + data URIs + cryptologos.cc + WalletConnect explorer (wallet icons)
-      "img-src 'self' data: blob: https://cryptologos.cc https://explorer-api.walletconnect.com https://registry.walletconnect.com https://walletconnect.com https://*.walletconnect.com https://*.walletconnect.org",
+      // Images: open — wallet icons come from various CDNs (Cloudflare imagedelivery.net,
+      // WalletConnect explorer, etc). Image loading poses no security risk for a read-only app.
+      "img-src * data: blob:",
       // Fonts: self
       "font-src 'self'",
       // API calls + Cronos RPC + WalletConnect + CoinGecko prices
