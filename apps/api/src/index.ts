@@ -43,9 +43,11 @@ async function main() {
   });
 
   // ── CORS ─────────────────────────────────────────────────────────────────────
-  // In production, CORS_ORIGIN must be set explicitly — no wildcard fallback
+  // In production, CORS_ORIGIN should be set explicitly.
+  // Default falls back to the known production domain if unset.
   if (process.env.NODE_ENV === 'production' && !process.env.CORS_ORIGIN) {
-    throw new Error('CORS_ORIGIN env var must be set in production');
+    console.warn('WARNING: CORS_ORIGIN env var not set — defaulting to https://www.crollateral.finance');
+    process.env.CORS_ORIGIN = 'https://www.crollateral.finance';
   }
   const allowedOrigins = config.corsOrigin.split(',').map(o => o.trim());
   await fastify.register(cors, {
