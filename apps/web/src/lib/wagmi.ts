@@ -1,33 +1,32 @@
 import { http, createConfig } from 'wagmi';
 import { cronos } from 'wagmi/chains';
-import { injected, walletConnect } from 'wagmi/connectors';
+import { injected } from 'wagmi/connectors';
+import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
 
-// WalletConnect project ID — get yours at https://cloud.walletconnect.com
-// Required: set NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID in your .env.local
+// Reown (formerly WalletConnect) project ID
+// Get yours at https://cloud.reown.com
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
 
 if (!projectId && process.env.NODE_ENV === 'production') {
   throw new Error(
-    '[wagmi] NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID is not set. ' +
-    'Get a project ID at https://cloud.walletconnect.com and add it to your environment.'
+    '[Reown] NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID is not set. ' +
+    'Get a project ID at https://cloud.reown.com'
   );
 }
 
-// In dev/test we allow a fallback placeholder — WC modal just won't work until ID is set
-const wcProjectId = projectId || 'dev-placeholder-replace-me';
+export const wcProjectId = projectId || 'dev-placeholder-replace-me';
 
-export const config = createConfig({
-  chains: [cronos],
-  connectors: [
-    // Injected connector handles MetaMask, Crypto.com Onchain, and any browser wallet
-    injected(),
-    // WalletConnect for mobile wallets and WC-compatible extensions
-    walletConnect({ projectId: wcProjectId }),
-  ],
+// Reown AppKit adapter — handles WalletConnect with working Reown CDN
+export const wagmiAdapter = new WagmiAdapter({
+  networks: [cronos],
+  projectId: wcProjectId,
   transports: {
     [cronos.id]: http('https://evm.cronos.org'),
   },
 });
+
+// Wagmi config — derived from the adapter (keeps wagmi hooks working as-is)
+export const config = wagmiAdapter.wagmiConfig;
 
 declare module 'wagmi' {
   interface Register {
