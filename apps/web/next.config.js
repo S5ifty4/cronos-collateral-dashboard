@@ -65,6 +65,10 @@ const securityHeaders = [
         'https://registry.walletconnect.com',
         'https://*.walletconnect.com',
         'https://*.walletconnect.org',
+        // Reown AppKit (formerly Web3Modal) API — wallet list + images
+        'https://*.web3modal.com',
+        'https://*.web3modal.org',
+        'https://api.web3modal.org',
       ].join(' '),
       // Frames: deny all
       "frame-src 'none'",
