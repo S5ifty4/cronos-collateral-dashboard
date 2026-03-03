@@ -1,15 +1,16 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import type { UnifiedPortfolio, ProtocolSnapshot } from '@cronos-dash/shared';
-import { adapters, fetchPrices } from '../adapters/index.js';
+import { adapters, fetchPrices, fetchOraclePrices } from '../adapters/index.js';
 
 const addressSchema = z.string().regex(/^0x[a-fA-F0-9]{40}$/);
 
 export const portfolioRoutes: FastifyPluginAsync = async (fastify) => {
-  // Prices endpoint
+  // Prices endpoint — returns oracle prices merged with CoinGecko fallbacks
   fastify.get('/prices', {
     handler: async () => {
-      const prices = await fetchPrices();
+      const [cg, oracle] = await Promise.all([fetchPrices(), fetchOraclePrices()]);
+      const prices = { ...cg, ...oracle }; // oracle overrides CoinGecko
       return { prices, timestamp: Date.now() };
     },
   });
@@ -39,10 +40,14 @@ export const portfolioRoutes: FastifyPluginAsync = async (fastify) => {
         );
 
         const snapshots: ProtocolSnapshot[] = [];
+        // Merge effective prices from all adapters (oracle prices override CoinGecko)
+        let effectivePrices: Record<string, number> = { ...prices };
         for (let i = 0; i < results.length; i++) {
           const result = results[i];
           if (result.status === 'fulfilled') {
-            snapshots.push(result.value);
+            snapshots.push(result.value.snapshot);
+            // Later adapters' oracle prices merge in (last write wins per symbol)
+            effectivePrices = { ...effectivePrices, ...result.value.effectivePrices };
           } else {
             fastify.log.error(
               { adapter: adapters[i].name, err: result.reason },
@@ -72,7 +77,9 @@ export const portfolioRoutes: FastifyPluginAsync = async (fastify) => {
             totalWeightedCollateralUsd,
             healthFactor,
           },
-          prices,
+          // Use oracle prices (from adapters) so frontend display is consistent
+          // with the calculations — same prices shown in simulator & KPI cards
+          prices: effectivePrices,
           timestamp: Date.now(),
         };
 

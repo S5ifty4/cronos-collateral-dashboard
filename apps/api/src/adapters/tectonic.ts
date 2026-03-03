@@ -54,6 +54,15 @@ export const tectonicAdapter = createCompoundAdapter(tectonicConfig);
  */
 export const fetchTectonicPortfolio = tectonicAdapter.fetchPortfolio;
 
+/**
+ * Fetch Tectonic's Chainlink oracle prices directly (no wallet address needed).
+ * Used by /prices endpoint so demo mode + simulator stay in sync with calculations.
+ */
+export async function fetchTectonicOraclePrices(): Promise<Record<string, number>> {
+  const { fetchOraclePricesForConfig } = await import('./compound-base.js');
+  return fetchOraclePricesForConfig(tectonicConfig);
+}
+
 // ─── Price fetching (shared, kept in tectonic for backward compat) ────────────
 
 // CoinGecko IDs for our assets

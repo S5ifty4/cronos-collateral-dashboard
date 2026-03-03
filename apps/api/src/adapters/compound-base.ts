@@ -139,6 +139,40 @@ export const PRICE_ORACLE_ABI = [
   },
 ] as const;
 
+/**
+ * Standalone oracle price fetch — usable without a full portfolio call.
+ * Returns prices for all markets in the config using the protocol's oracle.
+ * Falls back to empty object if oracle is not configured or call fails.
+ */
+export async function fetchOraclePricesForConfig(
+  cfg: CompoundProtocolConfig,
+  rpcUrl?: string
+): Promise<Record<string, number>> {
+  if (!cfg.priceOracle) return {};
+  const client = createPublicClient({
+    chain: cronos,
+    transport: http(rpcUrl ?? cfg.rpcUrls[0]),
+  });
+  const result: Record<string, number> = {};
+  try {
+    await Promise.all(
+      cfg.markets.map(async (m) => {
+        const raw = await client.readContract({
+          address: cfg.priceOracle!,
+          abi: PRICE_ORACLE_ABI,
+          functionName: 'getUnderlyingPrice',
+          args: [m.tTokenAddress],
+        });
+        const price = Number(raw) / Math.pow(10, 36 - m.underlyingDecimals);
+        if (price > 0) result[m.symbol] = price;
+      })
+    );
+  } catch (err) {
+    console.warn('[oracle] Standalone price fetch failed:', err);
+  }
+  return result;
+}
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface CompoundMarketConfig {
@@ -274,14 +308,17 @@ export function createCompoundAdapter(cfg: CompoundProtocolConfig) {
   async function fetchPortfolio(
     address: string,
     prices: Record<string, number>
-  ): Promise<ProtocolSnapshot> {
+  ): Promise<{ snapshot: ProtocolSnapshot; effectivePrices: Record<string, number> }> {
     const cacheKey = address.toLowerCase();
     const now = Date.now();
     const cached = portfolioCache.get(cacheKey);
 
     if (cached && now - cached.timestamp < PORTFOLIO_CACHE_TTL) {
       console.log(`[${cfg.name}] Using cached portfolio for ${address}`);
-      return recalculatePortfolioWithPrices(cached.data, prices, cfg.maxLtv);
+      return {
+        snapshot: recalculatePortfolioWithPrices(cached.data, prices, cfg.maxLtv),
+        effectivePrices: prices,
+      };
     }
 
     if (portfolioCache.size > 100) cleanupCache();
@@ -417,10 +454,12 @@ export function createCompoundAdapter(cfg: CompoundProtocolConfig) {
       const snapshot: ProtocolSnapshot = { protocol: cfg.name, collaterals, borrows, totals, risk };
       portfolioCache.set(cacheKey, { data: snapshot, timestamp: now });
 
-      return snapshot;
+      // Return both snapshot and the prices actually used (oracle > CoinGecko)
+      // so the route can expose consistent prices to the frontend
+      return { snapshot, effectivePrices };
     } catch (error) {
       console.error(`[${cfg.name}] Error fetching portfolio:`, error);
-      return emptySnapshot(cfg.name);
+      return { snapshot: emptySnapshot(cfg.name), effectivePrices: prices };
     }
   }
 
