@@ -164,7 +164,11 @@ export async function fetchOraclePricesForConfig(
           args: [m.tTokenAddress],
         });
         const price = Number(raw) / Math.pow(10, 36 - m.underlyingDecimals);
-        if (price > 0) result[m.symbol] = price;
+        if (price > 0) {
+          result[m.symbol] = price;
+          // Alias WBTC → BTC (same underlying price, used in simulator display)
+          if (m.symbol === 'WBTC') result['BTC'] = price;
+        }
       })
     );
   } catch (err) {
@@ -365,11 +369,14 @@ export function createCompoundAdapter(cfg: CompoundProtocolConfig) {
               });
               // Compound oracle returns price scaled by 1e(36 - underlyingDecimals)
               const price = Number(raw) / Math.pow(10, 36 - info.underlyingDecimals);
-              return { symbol: info.symbol, price };
+              return { symbol: info.symbol, price, isBtcEquiv: info.symbol === 'WBTC' };
             })
           );
-          for (const { symbol, price } of oracleResults) {
-            if (price > 0) oraclePrices[symbol] = price;
+          for (const { symbol, price, isBtcEquiv } of oracleResults) {
+            if (price > 0) {
+              oraclePrices[symbol] = price;
+              if (isBtcEquiv) oraclePrices['BTC'] = price; // WBTC ≈ BTC
+            }
           }
           console.log(`[${cfg.name}] Oracle prices:`, oraclePrices);
         } catch (err) {
