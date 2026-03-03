@@ -23,11 +23,12 @@ function formatUsd(n: number): string {
 }
 
 // Token logo URLs
+// Logos bundled locally — avoids external CDN blocking/rate-limiting
 const TOKEN_LOGOS: Record<string, string> = {
-  CRO: 'https://cryptologos.cc/logos/cronos-cro-logo.png',
-  USDC: 'https://cryptologos.cc/logos/usd-coin-usdc-logo.png',
-  ETH: 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
-  WBTC: 'https://cryptologos.cc/logos/wrapped-bitcoin-wbtc-logo.png',
+  CRO: '/tokens/CRO.png',
+  USDC: '/tokens/USDC.png',
+  ETH: '/tokens/ETH.png',
+  WBTC: '/tokens/WBTC.png',
 };
 
 export function PositionTables({
