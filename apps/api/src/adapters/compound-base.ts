@@ -372,9 +372,11 @@ export function createCompoundAdapter(cfg: CompoundProtocolConfig) {
               return { symbol: info.symbol, price, isBtcEquiv: info.symbol === 'WBTC' };
             })
           );
+          // Stablecoins pegged to $1 — clamp within 0.5% to $1.00 (matches Tectonic display behaviour)
+          const STABLECOINS = new Set(['USDC', 'USDT', 'DAI', 'BUSD']);
           for (const { symbol, price, isBtcEquiv } of oracleResults) {
             if (price > 0) {
-              oraclePrices[symbol] = price;
+              oraclePrices[symbol] = STABLECOINS.has(symbol) && Math.abs(price - 1) < 0.005 ? 1.0 : price;
               if (isBtcEquiv) oraclePrices['BTC'] = price; // WBTC ≈ BTC
             }
           }
