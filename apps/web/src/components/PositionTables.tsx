@@ -25,10 +25,28 @@ function formatUsd(n: number): string {
 // Token logo URLs
 // Logos bundled locally — avoids external CDN blocking/rate-limiting
 const TOKEN_LOGOS: Record<string, string> = {
-  CRO: '/tokens/CRO.png',
-  USDC: '/tokens/USDC.png',
-  ETH: '/tokens/ETH.png',
-  WBTC: '/tokens/WBTC.png',
+  // Native + major
+  CRO:    '/tokens/CRO.png',
+  ETH:    '/tokens/ETH.png',
+  WBTC:   '/tokens/WBTC.png',
+  // Stablecoins
+  USDC:   '/tokens/USDC.png',
+  USDT:   '/tokens/USDT.png',
+  DAI:    '/tokens/DAI.png',
+  TUSD:   '/tokens/TUSD.png',
+  USC:    '/tokens/USC.png',
+  // Alt crypto
+  ATOM:   '/tokens/ATOM.png',
+  ADA:    '/tokens/ADA.png',
+  XRP:    '/tokens/XRP.png',
+  LTC:    '/tokens/LTC.png',
+  // Cronos ecosystem
+  TONIC:  '/tokens/TONIC.png',
+  VVS:    '/tokens/VVS.png',
+  LCRO:   '/tokens/LCRO.png',
+  // CDC wrapped
+  CDCBTC: '/tokens/CDCBTC.png',
+  CDCETH: '/tokens/CDCETH.png',
 };
 
 export function PositionTables({
