@@ -396,7 +396,7 @@ export function createCompoundAdapter(cfg: CompoundProtocolConfig) {
           const [tTokenBalance, borrowBalance, exchangeRate, marketInfo] = await Promise.all([
             rpcClient.readContract({ address: tToken, abi: TTOKEN_ABI, functionName: 'balanceOf', args: [userAddress] }),
             rpcClient.readContract({ address: tToken, abi: TTOKEN_ABI, functionName: 'borrowBalanceCurrent', args: [userAddress] }),
-            rpcClient.readContract({ address: tToken, abi: TTOKEN_ABI, functionName: 'exchangeRateStored' }),
+            rpcClient.readContract({ address: tToken, abi: TTOKEN_ABI, functionName: 'exchangeRateCurrent' }),
             rpcClient.readContract({ address: cfg.comptroller, abi: COMPTROLLER_ABI, functionName: 'markets', args: [tToken] }),
           ]);
 
