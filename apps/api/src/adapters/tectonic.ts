@@ -53,88 +53,44 @@ export const tectonicAdapter = createCompoundAdapter(tectonicConfig);
 export const fetchTectonicPortfolio = tectonicAdapter.fetchPortfolio;
 
 /**
- * Fetch Tectonic's Chainlink oracle prices directly (no wallet address needed).
- * Used by /prices endpoint so demo mode + simulator stay in sync with calculations.
+ * Fetch all prices from Tectonic's on-chain oracle (Chainlink feeds).
+ * Falls back to hardcoded conservative values if RPC is unavailable.
+ * No external API dependency — pure on-chain reads.
  */
-export async function fetchTectonicOraclePrices(): Promise<Record<string, number>> {
-  const { fetchOraclePricesForConfig } = await import('./compound-base.js');
-  return fetchOraclePricesForConfig(tectonicConfig);
-}
 
-// ─── Price fetching (shared, kept in tectonic for backward compat) ────────────
-
-// CoinGecko IDs for our assets
-const COINGECKO_IDS: Record<string, string> = {
-  CRO: 'crypto-com-chain',
-  USDC: 'usd-coin',
-  ETH: 'ethereum',
-  WBTC: 'wrapped-bitcoin',
-  BTC: 'bitcoin',
-  SOL: 'solana',
-  BNB: 'binancecoin',
-  XRP: 'ripple',
-  ADA: 'cardano',
-  AVAX: 'avalanche-2',
-  DOGE: 'dogecoin',
-  DOT: 'polkadot',
-  MATIC: 'matic-network',
-  LINK: 'chainlink',
-  ATOM: 'cosmos',
-};
-
+// Hardcoded fallbacks — only used if Cronos RPC is completely down
+// (in which case wallet data can't be fetched anyway)
 const FALLBACK_PRICES: Record<string, number> = {
-  CRO: 0.09,
-  USDC: 1.0,
-  ETH: 3200,
-  WBTC: 98000,
-  BTC: 98000,
-  SOL: 180,
-  BNB: 600,
-  XRP: 2.5,
-  ADA: 0.9,
-  AVAX: 35,
-  DOGE: 0.3,
-  DOT: 7,
-  MATIC: 0.5,
-  LINK: 18,
-  ATOM: 9,
+  CRO: 0.075, USDC: 1.0, USDT: 1.0, DAI: 1.0, TUSD: 1.0, USC: 1.0,
+  ETH: 2000, WBTC: 68000, BTC: 68000,
+  ATOM: 2.0, ADA: 0.26, XRP: 1.4, LTC: 55,
+  TONIC: 0.000001, VVS: 0.000001, LCRO: 0.095,
+  CDCBTC: 68000, CDCETH: 2000,
 };
 
 let priceCache: Record<string, number> | null = null;
 let priceCacheTimestamp = 0;
-const PRICE_CACHE_TTL = 300_000; // 5 minutes
+const PRICE_CACHE_TTL = 60_000; // 1 min — oracle reads are free, keep prices fresh
 
 export async function fetchPrices(): Promise<Record<string, number>> {
   const now = Date.now();
   if (priceCache && now - priceCacheTimestamp < PRICE_CACHE_TTL) {
-    console.log('Using cached prices:', priceCache);
     return priceCache;
   }
-
-  try {
-    const ids = Object.values(COINGECKO_IDS).join(',');
-    const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`;
-
-    const response = await fetch(url, { headers: { Accept: 'application/json' } });
-
-    if (!response.ok) {
-      console.warn('CoinGecko API error, using fallback prices');
-      return priceCache ?? FALLBACK_PRICES;
-    }
-
-    const data = (await response.json()) as Record<string, { usd?: number }>;
-
-    const prices: Record<string, number> = {};
-    for (const [symbol, geckoId] of Object.entries(COINGECKO_IDS)) {
-      prices[symbol] = data[geckoId]?.usd ?? FALLBACK_PRICES[symbol];
-    }
-
+  const prices = await fetchTectonicOraclePrices();
+  if (Object.keys(prices).length > 0) {
+    // Alias WBTC → BTC
+    if (prices['WBTC']) prices['BTC'] = prices['WBTC'];
     priceCache = prices;
     priceCacheTimestamp = now;
-    console.log('Fetched live prices:', prices);
+    console.log('[prices] Oracle prices fetched:', Object.keys(prices).length, 'assets');
     return prices;
-  } catch (error) {
-    console.error('Failed to fetch prices from CoinGecko:', error);
-    return priceCache ?? FALLBACK_PRICES;
   }
+  console.warn('[prices] Oracle unavailable, using fallback prices');
+  return priceCache ?? FALLBACK_PRICES;
+}
+
+export async function fetchTectonicOraclePrices(): Promise<Record<string, number>> {
+  const { fetchOraclePricesForConfig } = await import('./compound-base.js');
+  return fetchOraclePricesForConfig(tectonicConfig);
 }

@@ -354,7 +354,7 @@ export function createCompoundAdapter(cfg: CompoundProtocolConfig) {
 
       // Fetch on-chain oracle prices if a priceOracle address is configured.
       // These match the protocol's own liquidation engine exactly (e.g. Chainlink via Tectonic).
-      // Falls back to CoinGecko prices passed in if oracle fetch fails or is unconfigured.
+      // Falls back to prices passed in (hardcoded fallbacks) if oracle fetch fails.
       const oraclePrices: Record<string, number> = {};
       if (cfg.priceOracle) {
         try {
@@ -380,11 +380,11 @@ export function createCompoundAdapter(cfg: CompoundProtocolConfig) {
           }
           console.log(`[${cfg.name}] Oracle prices:`, oraclePrices);
         } catch (err) {
-          console.warn(`[${cfg.name}] Oracle price fetch failed, falling back to CoinGecko:`, err);
+          console.warn(`[${cfg.name}] Oracle price fetch failed, falling back to base prices:`, err);
         }
       }
 
-      // Merge: oracle prices take priority over CoinGecko prices
+      // Merge: oracle prices take priority over fallback prices
       const effectivePrices = { ...prices, ...oraclePrices };
 
       // Fetch data for all markets in parallel
@@ -461,7 +461,7 @@ export function createCompoundAdapter(cfg: CompoundProtocolConfig) {
       const snapshot: ProtocolSnapshot = { protocol: cfg.name, collaterals, borrows, totals, risk };
       portfolioCache.set(cacheKey, { data: snapshot, timestamp: now });
 
-      // Return both snapshot and the prices actually used (oracle > CoinGecko)
+      // Return both snapshot and the prices actually used (oracle > fallback)
       // so the route can expose consistent prices to the frontend
       return { snapshot, effectivePrices };
     } catch (error) {

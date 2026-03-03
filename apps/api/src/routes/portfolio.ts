@@ -1,16 +1,15 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import type { UnifiedPortfolio, ProtocolSnapshot } from '@cronos-dash/shared';
-import { adapters, fetchPrices, fetchOraclePrices } from '../adapters/index.js';
+import { adapters, fetchPrices } from '../adapters/index.js';
 
 const addressSchema = z.string().regex(/^0x[a-fA-F0-9]{40}$/);
 
 export const portfolioRoutes: FastifyPluginAsync = async (fastify) => {
-  // Prices endpoint — returns oracle prices merged with CoinGecko fallbacks
+  // Prices endpoint — pure Chainlink oracle prices (no CoinGecko)
   fastify.get('/prices', {
     handler: async () => {
-      const [cg, oracle] = await Promise.all([fetchPrices(), fetchOraclePrices()]);
-      const prices = { ...cg, ...oracle }; // oracle overrides CoinGecko
+      const prices = await fetchPrices();
       return { prices, timestamp: Date.now() };
     },
   });
@@ -40,7 +39,7 @@ export const portfolioRoutes: FastifyPluginAsync = async (fastify) => {
         );
 
         const snapshots: ProtocolSnapshot[] = [];
-        // Merge effective prices from all adapters (oracle prices override CoinGecko)
+        // Merge effective prices from all adapters (oracle prices override fallbacks)
         let effectivePrices: Record<string, number> = { ...prices };
         for (let i = 0; i < results.length; i++) {
           const result = results[i];
