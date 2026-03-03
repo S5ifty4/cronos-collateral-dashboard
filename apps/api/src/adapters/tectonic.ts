@@ -14,6 +14,9 @@ const tectonicConfig = {
   chainId: 25,
   rpcUrls: CRONOS_RPC_URLS,
   comptroller: TECTONIC_ADDRESSES.comptroller,
+  // Verified on-chain: call oracle() on comptroller returns this address.
+  // Uses Chainlink feeds — same prices Tectonic uses for liquidations.
+  priceOracle: '0xD360D8cABc1b2e56eCf348BFF00D2Bd9F658754A' as const,
   maxLtv: TECTONIC_MAX_LTV,
   markets: [
     {

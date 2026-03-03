@@ -128,6 +128,17 @@ export const ERC20_ABI = [
   },
 ] as const;
 
+// Compound V2 price oracle ABI
+export const PRICE_ORACLE_ABI = [
+  {
+    inputs: [{ name: 'cToken', type: 'address' }],
+    name: 'getUnderlyingPrice',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+] as const;
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface CompoundMarketConfig {
@@ -144,6 +155,7 @@ export interface CompoundProtocolConfig {
   chainId: number;      // 25 = Cronos mainnet
   rpcUrls: string[];
   comptroller: `0x${string}`;
+  priceOracle?: `0x${string}`; // Compound V2 oracle — getUnderlyingPrice(tToken)
   maxLtv: number;       // e.g. 0.63 for Tectonic
   markets: readonly CompoundMarketConfig[];
 }
@@ -299,6 +311,38 @@ export function createCompoundAdapter(cfg: CompoundProtocolConfig) {
 
       const tTokenAddresses = Object.keys(tTokenMap);
 
+      // Fetch on-chain oracle prices if a priceOracle address is configured.
+      // These match the protocol's own liquidation engine exactly (e.g. Chainlink via Tectonic).
+      // Falls back to CoinGecko prices passed in if oracle fetch fails or is unconfigured.
+      const oraclePrices: Record<string, number> = {};
+      if (cfg.priceOracle) {
+        try {
+          const oracleResults = await Promise.all(
+            tTokenAddresses.map(async (tTokenAddr) => {
+              const info = tTokenMap[tTokenAddr];
+              const raw = await rpcClient.readContract({
+                address: cfg.priceOracle!,
+                abi: PRICE_ORACLE_ABI,
+                functionName: 'getUnderlyingPrice',
+                args: [tTokenAddr as `0x${string}`],
+              });
+              // Compound oracle returns price scaled by 1e(36 - underlyingDecimals)
+              const price = Number(raw) / Math.pow(10, 36 - info.underlyingDecimals);
+              return { symbol: info.symbol, price };
+            })
+          );
+          for (const { symbol, price } of oracleResults) {
+            if (price > 0) oraclePrices[symbol] = price;
+          }
+          console.log(`[${cfg.name}] Oracle prices:`, oraclePrices);
+        } catch (err) {
+          console.warn(`[${cfg.name}] Oracle price fetch failed, falling back to CoinGecko:`, err);
+        }
+      }
+
+      // Merge: oracle prices take priority over CoinGecko prices
+      const effectivePrices = { ...prices, ...oraclePrices };
+
       // Fetch data for all markets in parallel
       const marketData = await Promise.all(
         tTokenAddresses.map(async (tTokenAddr) => {
@@ -321,7 +365,7 @@ export function createCompoundAdapter(cfg: CompoundProtocolConfig) {
           const borrowBalanceNum = Number(borrowBalance) / Math.pow(10, ud);
           const collateralFactor = Number(marketInfo[1]) / 1e18;
           const isEnabled = enabledMarkets.has(tTokenAddr);
-          const price = prices[info.symbol] ?? 0;
+          const price = effectivePrices[info.symbol] ?? 0;
 
           return { info, tTokenAddr, underlyingBalance, borrowBalanceNum, collateralFactor, isEnabled, price, ud };
         })
@@ -366,7 +410,7 @@ export function createCompoundAdapter(cfg: CompoundProtocolConfig) {
           .reduce((sum, c) => sum + c.valueUsd * c.liquidationThreshold, 0),
       };
 
-      const risk = calculateRiskMetrics(collaterals, borrows, prices);
+      const risk = calculateRiskMetrics(collaterals, borrows, effectivePrices);
       const maxBorrow = totals.collateralUsd * cfg.maxLtv;
       risk.availableBorrowUsd = protocolShortfall > 0 ? 0 : Math.max(0, maxBorrow - totals.borrowUsd);
 
