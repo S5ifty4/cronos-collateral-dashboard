@@ -31,6 +31,11 @@ createAppKit({
     '--w3m-accent': '#00D4FF',
     '--w3m-border-radius-master': '12px',
   },
+  // Pin Cronos-native wallets as featured; All Wallets (160+) still accessible
+  featuredWalletIds: [
+    'f2436c67184f158d1beda5df53298ee84abfc367581e4505134b5bcf5f46697d', // Crypto.com Onchain
+    'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96', // MetaMask
+  ],
 });
 
 export function Providers({ children }: { children: ReactNode }) {
