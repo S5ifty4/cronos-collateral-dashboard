@@ -25,7 +25,7 @@ function formatUsd(n: number): string {
 // Token logo URLs
 // Logos bundled locally — avoids external CDN blocking/rate-limiting
 const TOKEN_LOGOS: Record<string, string> = {
-  CRO: '/tokens/CRO.png',
+  CRO: '/tokens/CRO.svg',
   USDC: '/tokens/USDC.png',
   ETH: '/tokens/ETH.png',
   WBTC: '/tokens/WBTC.png',
