@@ -144,6 +144,16 @@ export default function TermsPage() {
             </p>
           </section>
 
+          {/* Section 9 */}
+          <section className="space-y-3">
+            <h2 className="text-base font-semibold text-cro-text">9. Governing Law</h2>
+            <p>
+              These terms are governed by and construed in accordance with the laws of the State of California,
+              without regard to its conflict of law principles. Any disputes arising from your use of this
+              site shall be subject to the exclusive jurisdiction of the courts located in California.
+            </p>
+          </section>
+
           {/* Back link */}
           <div className="pt-4 border-t border-cro-border">
             <Link href="/" className="text-cro-cyan text-sm hover:underline">

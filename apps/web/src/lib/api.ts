@@ -18,7 +18,7 @@ export async function fetchPrices(): Promise<Record<string, number>> {
 }
 
 export async function fetchPortfolio(address: string): Promise<UnifiedPortfolio> {
-  const res = await fetch(`${API_BASE}/api/portfolio?address=${address}`);
+  const res = await fetch(`${API_BASE}/api/portfolio?address=${encodeURIComponent(address)}`);
   if (!res.ok) {
     throw new Error('Failed to fetch portfolio');
   }
