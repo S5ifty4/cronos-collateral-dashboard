@@ -102,6 +102,16 @@ export default function Home() {
                 {copied && <span className="text-cro-success text-xs">Copied!</span>}
               </button>
             </div>
+            {/* Disclaimer */}
+            <p className="text-center text-xs text-cro-muted max-w-2xl leading-relaxed">
+              Crollateral is an independent, community-built tool. Not affiliated with Tectonic Finance or Crypto.com.
+              Prices are approximate and may be delayed — always verify your positions directly on Tectonic before making
+              any decisions. This tool is read-only and never submits transactions or requests wallet signing.{' '}
+              <strong className="text-cro-muted">Not financial advice. Use at your own risk.</strong>
+            </p>
+            <a href="/terms" className="text-xs text-cro-cyan hover:underline">
+              Terms of Use
+            </a>
           </div>
         </div>
       </footer>
