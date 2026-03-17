@@ -113,7 +113,7 @@ export function TargetHFHelper({
               <div className="text-xs text-cro-cyan font-medium mb-1">
                 Option 1: Repay Debt
               </div>
-              <div className="text-lg font-bold text-cro-text">
+              <div className="text-lg font-bold font-mono text-cro-text">
                 Repay ${formatNumber(result.repayAmount.amount)}{' '}
                 {result.repayAmount.symbol}
               </div>
@@ -124,7 +124,7 @@ export function TargetHFHelper({
               <div className="text-xs text-purple-400 font-medium mb-1">
                 Option 2: Add Collateral
               </div>
-              <div className="text-lg font-bold text-cro-text">
+              <div className="text-lg font-bold font-mono text-cro-text">
                 Add {formatNumber(result.addCollateralAmount.amount, 0)}{' '}
                 {result.addCollateralAmount.symbol}
               </div>

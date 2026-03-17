@@ -82,7 +82,7 @@ export function KPICards({
         <div className="text-xs sm:text-sm font-medium text-cro-muted mb-1">
           Health Factor
         </div>
-        <div className={`text-xl sm:text-3xl font-bold ${getBorrowLimitColor(borrowLimitUsed)}`}>
+        <div className={`text-xl sm:text-3xl font-bold font-mono ${getBorrowLimitColor(borrowLimitUsed)}`}>
           {formatNumber(borrowLimitUsed, 1)}%
         </div>
         <div className="text-xs text-cro-muted mt-1 hidden sm:block">
@@ -95,7 +95,7 @@ export function KPICards({
         <div className="text-xs sm:text-sm font-medium text-cro-muted mb-1">
           {collateralSymbol} Liq. Price
         </div>
-        <div className="text-lg sm:text-2xl lg:text-3xl font-bold text-cro-cyan whitespace-nowrap">
+        <div className="text-lg sm:text-2xl lg:text-3xl font-bold font-mono text-cro-cyan whitespace-nowrap">
           ${formatNumber(liquidationPrice, 3)}
         </div>
         <div className="text-xs text-cro-muted mt-1 hidden sm:block">
@@ -108,7 +108,7 @@ export function KPICards({
         <div className="text-xs sm:text-sm font-medium text-cro-muted mb-1">
           Total Borrowed
         </div>
-        <div className="text-lg sm:text-2xl lg:text-3xl font-bold text-cro-text">
+        <div className="text-lg sm:text-2xl lg:text-3xl font-bold font-mono text-cro-text">
           {formatUsd(totalBorrowUsd)}
         </div>
       </div>
@@ -118,7 +118,7 @@ export function KPICards({
         <div className="text-xs sm:text-sm font-medium text-cro-muted mb-1">
           Total Collateral
         </div>
-        <div className="text-lg sm:text-2xl lg:text-3xl font-bold text-cro-text">
+        <div className="text-lg sm:text-2xl lg:text-3xl font-bold font-mono text-cro-text">
           {formatUsd(totalCollateralUsd)}
         </div>
       </div>

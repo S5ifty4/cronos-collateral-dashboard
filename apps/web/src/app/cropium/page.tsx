@@ -191,15 +191,15 @@ export default function CropiumPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="p-4 bg-cro-dark rounded-lg">
                     <div className="text-sm text-cro-muted mb-1">Wallet Balance</div>
-                    <div className="text-xl font-bold text-cro-text">{formatNumber(walletCro)} CRO</div>
+                    <div className="text-xl font-bold font-mono text-cro-text">{formatNumber(walletCro)} CRO</div>
                   </div>
                   <div className="p-4 bg-cro-dark rounded-lg">
                     <div className="text-sm text-cro-muted mb-1">In Positions</div>
-                    <div className="text-xl font-bold text-cro-text">{formatNumber(positionCro)} CRO</div>
+                    <div className="text-xl font-bold font-mono text-cro-text">{formatNumber(positionCro)} CRO</div>
                   </div>
                   <div className="p-4 bg-cro-dark rounded-lg border border-cro-cyan/30">
                     <div className="text-sm text-cro-muted mb-1">Total CRO</div>
-                    <div className="text-xl font-bold text-cro-cyan">{formatNumber(autoDetectedCro)} CRO</div>
+                    <div className="text-xl font-bold font-mono text-cro-cyan">{formatNumber(autoDetectedCro)} CRO</div>
                   </div>
                 </div>
               )}
@@ -208,7 +208,7 @@ export default function CropiumPage() {
               {(useManualInput || !isConnected) && manualCro > 0 && (
                 <div className="mt-4 p-4 bg-cro-dark rounded-lg border border-cro-cyan/30">
                   <div className="text-sm text-cro-muted mb-1">Total CRO</div>
-                  <div className="text-xl font-bold text-cro-cyan">{formatNumber(totalCro)} CRO</div>
+                  <div className="text-xl font-bold font-mono text-cro-cyan">{formatNumber(totalCro)} CRO</div>
                 </div>
               )}
             </div>
@@ -221,12 +221,12 @@ export default function CropiumPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
                 <div className="p-6 bg-cro-dark rounded-xl">
                   <div className="text-sm text-cro-muted mb-2">Current Value</div>
-                  <div className="text-3xl font-bold text-cro-text">{formatUsd(currentValue)}</div>
+                  <div className="text-3xl font-bold font-mono text-cro-text">{formatUsd(currentValue)}</div>
                   <div className="text-sm text-cro-muted mt-1">@ {formatUsd(currentCroPrice)}/CRO</div>
                 </div>
                 <div className={`p-6 rounded-xl border-2 ${valueChange >= 0 ? 'bg-cro-success/10 border-cro-success/30' : 'bg-cro-danger/10 border-cro-danger/30'}`}>
                   <div className="text-sm text-cro-muted mb-2">Simulated Value</div>
-                  <div className={`text-3xl font-bold ${valueChange >= 0 ? 'text-cro-success' : 'text-cro-danger'}`}>
+                  <div className={`text-3xl font-bold font-mono ${valueChange >= 0 ? 'text-cro-success' : 'text-cro-danger'}`}>
                     {formatUsd(simulatedValue)}
                   </div>
                   <div className={`text-sm mt-1 ${valueChange >= 0 ? 'text-cro-success' : 'text-cro-danger'}`}>
