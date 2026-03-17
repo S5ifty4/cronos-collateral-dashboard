@@ -85,7 +85,7 @@ export function KPICards({
         <div className={`text-xl sm:text-3xl font-bold font-mono ${getBorrowLimitColor(borrowLimitUsed)}`}>
           {formatNumber(borrowLimitUsed, 1)}%
         </div>
-        <div className="text-xs text-cro-muted mt-1 hidden sm:block">
+        <div className="text-xs text-cro-muted font-mono mt-1 hidden sm:block">
           LTV: {formatNumber(ltv, 2)}%
         </div>
       </div>
@@ -98,7 +98,7 @@ export function KPICards({
         <div className="text-lg sm:text-2xl lg:text-3xl font-bold font-mono text-cro-cyan whitespace-nowrap">
           ${formatNumber(liquidationPrice, 3)}
         </div>
-        <div className="text-xs text-cro-muted mt-1 hidden sm:block">
+        <div className="text-xs text-cro-muted font-mono mt-1 hidden sm:block">
           {priceBuffer > 0 ? `${formatNumber(priceBuffer, 1)}% below current` : '—'}
         </div>
       </div>

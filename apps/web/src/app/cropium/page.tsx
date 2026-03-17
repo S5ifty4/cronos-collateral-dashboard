@@ -222,14 +222,14 @@ export default function CropiumPage() {
                 <div className="p-6 bg-cro-dark rounded-xl">
                   <div className="text-sm text-cro-muted mb-2">Current Value</div>
                   <div className="text-3xl font-bold font-mono text-cro-text">{formatUsd(currentValue)}</div>
-                  <div className="text-sm text-cro-muted mt-1">@ {formatUsd(currentCroPrice)}/CRO</div>
+                  <div className="text-sm text-cro-muted font-mono mt-1">@ {formatUsd(currentCroPrice)}/CRO</div>
                 </div>
                 <div className={`p-6 rounded-xl border-2 ${valueChange >= 0 ? 'bg-cro-success/10 border-cro-success/30' : 'bg-cro-danger/10 border-cro-danger/30'}`}>
                   <div className="text-sm text-cro-muted mb-2">Simulated Value</div>
                   <div className={`text-3xl font-bold font-mono ${valueChange >= 0 ? 'text-cro-success' : 'text-cro-danger'}`}>
                     {formatUsd(simulatedValue)}
                   </div>
-                  <div className={`text-sm mt-1 ${valueChange >= 0 ? 'text-cro-success' : 'text-cro-danger'}`}>
+                  <div className={`text-sm font-mono mt-1 ${valueChange >= 0 ? 'text-cro-success' : 'text-cro-danger'}`}>
                     {valueChange >= 0 ? '+' : ''}{formatUsd(valueChange)} ({valueChange >= 0 ? '+' : ''}{formatNumber(percentChange)}%)
                   </div>
                 </div>
@@ -284,7 +284,7 @@ export default function CropiumPage() {
                       : 'bg-cro-dark text-cro-muted hover:text-cro-text border border-cro-border hover:border-cro-cyan/50'
                   }`}
                 >
-                  Current (${currentCroPrice.toFixed(4)})
+                  Current (<span className="font-mono">${currentCroPrice.toFixed(4)}</span>)
                 </button>
                 {PRICE_MILESTONES.map((milestone) => (
                   <button
@@ -308,7 +308,7 @@ export default function CropiumPage() {
                   }`}
                   title={`CRO at Binance market cap ($${formatNumber(bnbMarketCap / 1e9)}B)`}
                 >
-                  🔶 Binance MC (${croAtBnbMarketCap.toFixed(2)})
+                  🔶 Binance MC (<span className="font-mono">${croAtBnbMarketCap.toFixed(2)}</span>)
                 </button>
               </div>
             </div>

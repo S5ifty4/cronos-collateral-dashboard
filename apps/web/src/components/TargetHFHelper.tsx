@@ -104,7 +104,7 @@ export function TargetHFHelper({
 
       {targetPercent >= currentPercent ? (
         <div className="p-3 bg-cro-success/10 border border-cro-success/30 rounded-lg text-sm text-cro-success">
-          Your current HF ({formatNumber(currentPercent, 1)}%) is already at or below target.
+          Your current HF (<span className="font-mono">{formatNumber(currentPercent, 1)}%</span>) is already at or below target.
         </div>
       ) : result ? (
         <div className="space-y-3">
@@ -128,7 +128,7 @@ export function TargetHFHelper({
                 Add {formatNumber(result.addCollateralAmount.amount, 0)}{' '}
                 {result.addCollateralAmount.symbol}
               </div>
-              <div className="text-xs text-purple-400">
+              <div className="text-xs text-purple-400 font-mono">
                 ≈ $
                 {formatNumber(
                   result.addCollateralAmount.amount *

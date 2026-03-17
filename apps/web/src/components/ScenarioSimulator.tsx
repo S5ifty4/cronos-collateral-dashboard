@@ -220,8 +220,8 @@ export function ScenarioSimulator({
             className="w-full h-2 bg-cro-border rounded-lg appearance-none cursor-pointer"
           />
           <div className="flex justify-between text-xs text-cro-muted mt-1">
-            <span>$0</span>
-            <span>${formatNumber(maxRepay)}</span>
+            <span className="font-mono">$0</span>
+            <span className="font-mono">${formatNumber(maxRepay)}</span>
           </div>
         </div>
 
@@ -255,8 +255,8 @@ export function ScenarioSimulator({
             className="w-full h-2 bg-cro-border rounded-lg appearance-none cursor-pointer"
           />
           <div className="flex justify-between text-xs text-cro-muted mt-1">
-            <span>$0</span>
-            <span className={dynamicAvailableBorrow > baseAvailableBorrow ? 'text-cro-success font-medium' : 'text-cro-success'}>
+            <span className="font-mono">$0</span>
+            <span className={dynamicAvailableBorrow > baseAvailableBorrow ? 'text-cro-success font-medium font-mono' : 'text-cro-success font-mono'}>
               Available: ${formatNumber(dynamicAvailableBorrow)}
               {dynamicAvailableBorrow > baseAvailableBorrow && (
                 <span className="text-cro-success ml-1">(+${formatNumber(dynamicAvailableBorrow - baseAvailableBorrow)})</span>
