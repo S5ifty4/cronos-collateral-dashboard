@@ -6,11 +6,23 @@ import { Providers } from '@/components/Providers';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Cronos Collateral Dashboard',
-  description: 'DeFi risk dashboard for Cronos lending protocols',
+  title: 'Crollateral — Cronos Collateral Dashboard',
+  description: 'Monitor your Tectonic Finance positions on Cronos. Check health factor, liquidation price, borrowing power, and simulate scenarios — before you get rekt.',
   viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
   icons: {
     icon: '/icon.svg',
+  },
+  openGraph: {
+    type: 'website',
+    url: 'https://crollateral.finance',
+    title: 'Crollateral — Cronos Collateral Dashboard',
+    description: 'Monitor your Tectonic Finance positions on Cronos. Check health factor, liquidation price, borrowing power, and simulate scenarios — before you get rekt.',
+    siteName: 'Crollateral',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Crollateral — Cronos Collateral Dashboard',
+    description: 'Monitor your Tectonic Finance positions on Cronos. Check health factor, liquidation price, borrowing power, and simulate scenarios — before you get rekt.',
   },
 };
 
