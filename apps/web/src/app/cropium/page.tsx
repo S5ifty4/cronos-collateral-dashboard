@@ -134,8 +134,8 @@ export default function CropiumPage() {
             <div className="flex items-center gap-3">
               <span className="text-2xl">💉</span>
               <div>
-                <h1 className="font-bold text-cro-text">CROpium Den</h1>
-                <p className="text-xs text-cro-muted">Dream a little dream...</p>
+                <h1 className="font-bold text-purple-300">CROpium</h1>
+                <p className="text-xs text-cro-muted">Take in moderate or safe doses</p>
               </div>
             </div>
             <button
@@ -314,9 +314,14 @@ export default function CropiumPage() {
             </div>
 
             {/* Disclaimer */}
-            <div className="text-center text-sm text-cro-muted">
-              <p>💉 CROpium is for entertainment purposes only. Not financial advice.</p>
-              <p className="mt-1">Past performance doesn't guarantee future results. DYOR.</p>
+            <div className="border-t border-cro-border pt-6 flex flex-col items-center gap-2">
+              <p className="text-center text-xs text-cro-muted max-w-2xl leading-relaxed">
+                CROpium is for entertainment purposes only. Crollateral is an independent, community-built tool.
+                Not affiliated with Tectonic Finance or Crypto.com. Prices are approximate and may be delayed.
+                Past performance doesn't guarantee future results. DYOR.
+              </p>
+              <strong className="text-xs text-cro-muted">Not financial advice. Use at your own risk.</strong>
+              <a href="/terms" className="text-xs text-cro-cyan hover:underline">Terms of Use</a>
             </div>
           </div>
       </main>
