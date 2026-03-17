@@ -123,7 +123,7 @@ export function PositionTables({
                         </div>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-right text-cro-text">
+                    <td className="px-4 py-3 text-right font-mono text-cro-text">
                       <div>{formatUsd(col.valueUsd)}</div>
                       {hasChange && (
                         <div className="text-xs text-cro-success">
@@ -131,7 +131,7 @@ export function PositionTables({
                         </div>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-right text-cro-muted">
+                    <td className="px-4 py-3 text-right font-mono text-cro-muted">
                       {(col.liquidationThreshold * 100).toFixed(0)}%
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-sm text-cro-cyan whitespace-nowrap">
@@ -207,7 +207,7 @@ export function PositionTables({
                         </div>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-right text-cro-text">
+                    <td className="px-4 py-3 text-right font-mono text-cro-text">
                       <div>{formatUsd(bor.valueUsd)}</div>
                       {hasChange && (
                         <div className={`text-xs ${isIncrease ? 'text-cro-warning' : 'text-cro-success'}`}>
