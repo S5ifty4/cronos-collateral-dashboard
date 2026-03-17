@@ -182,11 +182,11 @@ export function ScenarioSimulator({
             className="w-full h-2 bg-cro-border rounded-lg appearance-none cursor-pointer"
           />
           <div className="flex justify-between text-xs text-cro-muted mt-1">
-            <span>-100%</span>
+            <span className="font-mono">-100%</span>
             <span className={`font-mono ${priceShock !== 0 ? 'text-cro-cyan font-medium' : 'text-cro-muted'}`}>
               Simulated: ${formatNumber(adjustedAssetPrice, 4)}
             </span>
-            <span>+100%</span>
+            <span className="font-mono">+100%</span>
           </div>
         </div>
 
@@ -295,8 +295,8 @@ export function ScenarioSimulator({
             className="w-full h-2 bg-cro-border rounded-lg appearance-none cursor-pointer"
           />
           <div className="flex justify-between text-xs text-cro-muted mt-1">
-            <span>0</span>
-            <span>1M {assetSymbol}</span>
+            <span className="font-mono">0</span>
+            <span className="font-mono">1M {assetSymbol}</span>
           </div>
         </div>
 
