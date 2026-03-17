@@ -278,19 +278,19 @@ export default function CropiumPage() {
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => handleMilestoneClick(currentCroPrice)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`px-4 py-2 rounded-lg text-sm font-medium font-mono transition-all ${
                     Math.abs(simulatedPrice - currentCroPrice) < 0.001
                       ? 'bg-cro-cyan text-cro-bg'
                       : 'bg-cro-dark text-cro-muted hover:text-cro-text border border-cro-border hover:border-cro-cyan/50'
                   }`}
                 >
-                  Current (<span className="font-mono">${currentCroPrice.toFixed(4)}</span>)
+                  Current (${currentCroPrice.toFixed(4)})
                 </button>
                 {PRICE_MILESTONES.map((milestone) => (
                   <button
                     key={milestone.value}
                     onClick={() => handleMilestoneClick(milestone.value)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    className={`px-4 py-2 rounded-lg text-sm font-medium font-mono transition-all ${
                       Math.abs(simulatedPrice - milestone.value) < 0.001
                         ? 'bg-cro-cyan text-cro-bg'
                         : 'bg-cro-dark text-cro-muted hover:text-cro-text border border-cro-border hover:border-cro-cyan/50'
@@ -301,14 +301,14 @@ export default function CropiumPage() {
                 ))}
                 <button
                   onClick={() => handleMilestoneClick(croAtBnbMarketCap)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`px-4 py-2 rounded-lg text-sm font-medium font-mono transition-all ${
                     Math.abs(simulatedPrice - croAtBnbMarketCap) < 0.01
                       ? 'bg-yellow-500 text-cro-bg'
                       : 'bg-cro-dark text-cro-muted hover:text-cro-text border border-yellow-500/50 hover:border-yellow-500'
                   }`}
                   title={`CRO at Binance market cap ($${formatNumber(bnbMarketCap / 1e9)}B)`}
                 >
-                  🔶 Binance MC (<span className="font-mono">${croAtBnbMarketCap.toFixed(2)}</span>)
+                  🔶 Binance MC (${croAtBnbMarketCap.toFixed(2)})
                 </button>
               </div>
             </div>
