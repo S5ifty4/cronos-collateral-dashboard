@@ -18,11 +18,13 @@ export const metadata: Metadata = {
     title: 'Crollateral — Cronos Collateral Dashboard',
     description: 'Monitor your Tectonic Finance positions on Cronos. Check health factor, liquidation price, borrowing power, and simulate scenarios — before you get rekt.',
     siteName: 'Crollateral',
+    images: [{ url: 'https://crollateral.finance/og-image.png', width: 1200, height: 630 }],
   },
   twitter: {
-    card: 'summary',
+    card: 'summary_large_image',
     title: 'Crollateral — Cronos Collateral Dashboard',
     description: 'Monitor your Tectonic Finance positions on Cronos. Check health factor, liquidation price, borrowing power, and simulate scenarios — before you get rekt.',
+    images: ['https://crollateral.finance/og-image.png'],
   },
 };
 
