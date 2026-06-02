@@ -276,11 +276,12 @@ export function Dashboard() {
   // Compute adjusted collateral positions for display
   const adjustedCollaterals: CollateralPosition[] = mainSnapshot.collaterals.map((col) => {
     const addedAmount = simulationData?.addedCollateral[col.asset.symbol] || 0;
+    const withdrawnAmount = simulationData?.withdrawnCollateral[col.asset.symbol] || 0;
     const priceShockPct = simulationData?.priceShocks[col.asset.symbol] || 0;
     const priceMultiplier = 1 + priceShockPct / 100;
     const currentPrice = activePortfolio.prices[col.asset.symbol] || 0;
     const adjustedPrice = currentPrice * priceMultiplier;
-    const newAmount = col.amount + addedAmount;
+    const newAmount = Math.max(0, col.amount + addedAmount - withdrawnAmount);
     const newValueUsd = newAmount * adjustedPrice;
 
     return {
@@ -457,6 +458,7 @@ export function Dashboard() {
           prices={activePortfolio.prices}
           onSimulationResult={setSimulationData}
           collateralAsset={demoMode ? demoAsset : undefined}
+          borrowAsset={selectedLoan?.borrow.asset.symbol}
         />
         <TargetHFHelper
           snapshot={mainSnapshot}

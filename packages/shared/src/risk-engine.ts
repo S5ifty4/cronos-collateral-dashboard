@@ -8,6 +8,9 @@ import type {
   ScenarioResult,
   TargetHFInput,
   TargetHFResult,
+  RepayWithCollateralInput,
+  RepayWithCollateralResult,
+  RepayWithCollateralWorstCase,
 } from './types.js';
 
 /**
@@ -261,6 +264,93 @@ export function simulateScenario(
         simulated.totalCollateralUsd - original.totalCollateralUsd,
       totalBorrowUsd: simulated.totalBorrowUsd - original.totalBorrowUsd,
     },
+  };
+}
+
+export function simulateRepayWithCollateral(
+  input: RepayWithCollateralInput
+): RepayWithCollateralResult {
+  const {
+    snapshot,
+    prices,
+    borrowSymbol,
+    collateralSymbol,
+    repayAmount,
+    quoteCollateralPerBorrowUnit,
+    slippagePct = 0,
+  } = input;
+
+  const originalSimulation = simulateScenario(snapshot, { actions: [] }, prices);
+  const borrowPrice = prices[borrowSymbol] || 1;
+  const collateralPrice = prices[collateralSymbol] || 0;
+  const baseRate = quoteCollateralPerBorrowUnit
+    ?? (collateralPrice > 0 ? borrowPrice / collateralPrice : 0);
+  const worstCaseRate = baseRate * (1 + slippagePct / 100);
+
+  const collateral = snapshot.collaterals.find(
+    (position) => position.asset.symbol === collateralSymbol
+  );
+  const borrow = snapshot.borrows.find(
+    (position) => position.asset.symbol === borrowSymbol
+  );
+  const currentCollateralAmount = collateral?.amount || 0;
+
+  const emptyResult: RepayWithCollateralResult = {
+    quoteCollateralPerBorrowUnit: 0,
+    effectiveCollateralPerBorrowUnit: 0,
+    collateralSoldAmount: 0,
+    remainingCollateralAmount: currentCollateralAmount,
+    simulation: originalSimulation,
+    worstCase: {
+      effectiveCollateralPerBorrowUnit: 0,
+      collateralSoldAmount: 0,
+      remainingCollateralAmount: currentCollateralAmount,
+      simulation: originalSimulation,
+    },
+  };
+
+  if (!borrow || !collateral || repayAmount <= 0 || baseRate <= 0 || !isFinite(baseRate)) {
+    return emptyResult;
+  }
+
+  const buildScenario = (
+    rate: number
+  ): RepayWithCollateralWorstCase => {
+    const collateralSoldAmount = repayAmount * rate;
+    const remainingCollateralAmount = Math.max(
+      0,
+      currentCollateralAmount - collateralSoldAmount
+    );
+
+    const simulation = simulateScenario(
+      snapshot,
+      {
+        actions: [
+          { type: 'withdrawCollateral', symbol: collateralSymbol, amount: collateralSoldAmount },
+          { type: 'repay', symbol: borrowSymbol, amount: repayAmount },
+        ],
+      },
+      prices
+    );
+
+    return {
+      effectiveCollateralPerBorrowUnit: rate,
+      collateralSoldAmount,
+      remainingCollateralAmount,
+      simulation,
+    };
+  };
+
+  const quoteScenario = buildScenario(baseRate);
+  const worstCase = buildScenario(worstCaseRate);
+
+  return {
+    quoteCollateralPerBorrowUnit: baseRate,
+    effectiveCollateralPerBorrowUnit: baseRate,
+    collateralSoldAmount: quoteScenario.collateralSoldAmount,
+    remainingCollateralAmount: quoteScenario.remainingCollateralAmount,
+    simulation: quoteScenario.simulation,
+    worstCase,
   };
 }
 

@@ -6,11 +6,15 @@ import type {
   ScenarioAction,
   ScenarioResult,
 } from '@cronos-dash/shared';
-import { simulateScenario as simulateLocal } from '@cronos-dash/shared';
+import {
+  simulateScenario as simulateLocal,
+  simulateRepayWithCollateral,
+} from '@cronos-dash/shared';
 
 export interface SimulationData {
   result: ScenarioResult;
   addedCollateral: Record<string, number>; // symbol -> amount added
+  withdrawnCollateral: Record<string, number>; // symbol -> amount withdrawn/sold
   addedBorrow: Record<string, number>; // symbol -> amount borrowed
   repaid: Record<string, number>; // symbol -> amount repaid
   priceShocks: Record<string, number>; // symbol -> pct change
@@ -21,6 +25,7 @@ interface ScenarioSimulatorProps {
   prices: Record<string, number>;
   onSimulationResult?: (data: SimulationData | null) => void;
   collateralAsset?: string; // Symbol of the collateral asset (defaults to first collateral or 'CRO')
+  borrowAsset?: string; // Symbol of the borrow asset to target (defaults to first borrow or 'USDC')
 }
 
 function formatNumber(n: number, decimals = 2): string {
@@ -36,15 +41,20 @@ export function ScenarioSimulator({
   prices,
   onSimulationResult,
   collateralAsset,
+  borrowAsset,
 }: ScenarioSimulatorProps) {
   const [priceShock, setPriceShock] = useState(0);
   const [repayAmount, setRepayAmount] = useState(0);
+  const [repayWithCollateralAmount, setRepayWithCollateralAmount] = useState(0);
+  const [repayWithCollateralSlippage, setRepayWithCollateralSlippage] = useState(0.5);
   const [borrowAmount, setBorrowAmount] = useState(0);
   const [addCollateralAmount, setAddCollateralAmount] = useState(0);
   const [result, setResult] = useState<ScenarioResult | null>(null);
 
   // Determine the collateral asset symbol - use prop, or first collateral, or default to 'CRO'
   const assetSymbol = collateralAsset || snapshot.collaterals[0]?.asset.symbol || 'CRO';
+  const borrowSymbol = borrowAsset || snapshot.borrows[0]?.asset.symbol || 'USDC';
+  const borrowPrice = prices[borrowSymbol] || 1;
   const assetPrice = prices[assetSymbol] || 0.15;
   const maxRepay = snapshot.totals.borrowUsd;
   const maxCollateral = 1000000;
@@ -52,6 +62,7 @@ export function ScenarioSimulator({
   // Get collateral's liquidation threshold
   const collateral = snapshot.collaterals.find(c => c.asset.symbol === assetSymbol);
   const collateralLT = collateral?.liquidationThreshold || 0.75;
+  const currentCollateralAmount = collateral?.amount || 0;
 
   // Calculate dynamic available borrow based on scenario inputs
   // Use safety factor to match Tectonic's conservative borrow limits
@@ -60,10 +71,28 @@ export function ScenarioSimulator({
   const adjustedAssetPrice = assetPrice * priceMultiplier;
   const addedCollateralValue = addCollateralAmount * adjustedAssetPrice * collateralLT * TECTONIC_SAFETY_FACTOR;
   const baseAvailableBorrow = snapshot.risk.availableBorrowUsd;
+  const repayWithCollateralBaseRate = adjustedAssetPrice > 0 ? borrowPrice / adjustedAssetPrice : 0;
+  const repayWithCollateralPlan = repayWithCollateralAmount > 0
+    ? simulateRepayWithCollateral({
+        snapshot,
+        prices,
+        borrowSymbol,
+        collateralSymbol: assetSymbol,
+        repayAmount: repayWithCollateralAmount,
+        quoteCollateralPerBorrowUnit: repayWithCollateralBaseRate,
+        slippagePct: repayWithCollateralSlippage,
+      })
+    : null;
+  const repayWithCollateralSoldAmount = repayWithCollateralPlan?.collateralSoldAmount || 0;
+  const repayWithCollateralQuoteRate = repayWithCollateralPlan?.quoteCollateralPerBorrowUnit || 0;
+  const repayWithCollateralWorstCaseRate = repayWithCollateralPlan?.worstCase.effectiveCollateralPerBorrowUnit || 0;
+  const repayWithCollateralWorstCaseSoldAmount = repayWithCollateralPlan?.worstCase.collateralSoldAmount || 0;
+  const repayWithCollateralWorstCaseRemaining = repayWithCollateralPlan?.worstCase.remainingCollateralAmount || currentCollateralAmount;
+  const remainingCollateralAfterRepayWithCollateral = repayWithCollateralPlan?.remainingCollateralAmount || currentCollateralAmount;
 
   // Calculate change from base: price impact + added collateral - repay change - new borrow
   const priceImpact = (priceMultiplier - 1) * snapshot.totals.weightedCollateralUsd * TECTONIC_SAFETY_FACTOR;
-  const repayBenefit = repayAmount; // Repaying frees up borrow capacity 1:1
+  const repayBenefit = repayAmount + repayWithCollateralAmount; // Repaying frees up borrow capacity 1:1
 
   const dynamicAvailableBorrow = Math.max(0,
     baseAvailableBorrow + priceImpact + addedCollateralValue + repayBenefit - borrowAmount
@@ -76,10 +105,22 @@ export function ScenarioSimulator({
       actions.push({ type: 'priceShock', symbol: assetSymbol, pctChange: priceShock });
     }
     if (repayAmount > 0) {
-      actions.push({ type: 'repay', symbol: 'USDC', amount: repayAmount });
+      actions.push({ type: 'repay', symbol: borrowSymbol, amount: repayAmount });
+    }
+    if (repayWithCollateralAmount > 0 && repayWithCollateralSoldAmount > 0) {
+      actions.push({
+        type: 'withdrawCollateral',
+        symbol: assetSymbol,
+        amount: repayWithCollateralSoldAmount,
+      });
+      actions.push({
+        type: 'repay',
+        symbol: borrowSymbol,
+        amount: repayWithCollateralAmount,
+      });
     }
     if (borrowAmount > 0) {
-      actions.push({ type: 'borrow', symbol: 'USDC', amount: borrowAmount });
+      actions.push({ type: 'borrow', symbol: borrowSymbol, amount: borrowAmount });
     }
     if (addCollateralAmount > 0) {
       actions.push({
@@ -103,12 +144,25 @@ export function ScenarioSimulator({
     const simData: SimulationData = {
       result: simResult,
       addedCollateral: addCollateralAmount > 0 ? { [assetSymbol]: addCollateralAmount } : {},
-      addedBorrow: borrowAmount > 0 ? { USDC: borrowAmount } : {},
-      repaid: repayAmount > 0 ? { USDC: repayAmount } : {},
+      withdrawnCollateral: repayWithCollateralSoldAmount > 0 ? { [assetSymbol]: repayWithCollateralSoldAmount } : {},
+      addedBorrow: borrowAmount > 0 ? { [borrowSymbol]: borrowAmount } : {},
+      repaid: (repayAmount + repayWithCollateralAmount) > 0 ? { [borrowSymbol]: repayAmount + repayWithCollateralAmount } : {},
       priceShocks: priceShock !== 0 ? { [assetSymbol]: priceShock } : {},
     };
     onSimulationResult?.(simData);
-  }, [priceShock, repayAmount, borrowAmount, addCollateralAmount, snapshot, prices, onSimulationResult, assetSymbol]);
+  }, [
+    priceShock,
+    repayAmount,
+    repayWithCollateralAmount,
+    repayWithCollateralSoldAmount,
+    borrowAmount,
+    addCollateralAmount,
+    snapshot,
+    prices,
+    onSimulationResult,
+    assetSymbol,
+    borrowSymbol,
+  ]);
 
   useEffect(() => {
     runSimulation();
@@ -117,6 +171,8 @@ export function ScenarioSimulator({
   const resetScenario = () => {
     setPriceShock(0);
     setRepayAmount(0);
+    setRepayWithCollateralAmount(0);
+    setRepayWithCollateralSlippage(0.5);
     setBorrowAmount(0);
     setAddCollateralAmount(0);
     setResult(null);
@@ -128,10 +184,15 @@ export function ScenarioSimulator({
     setRepayAmount(Math.min(Math.max(0, num), maxRepay));
   };
 
+  const handleRepayWithCollateralInputChange = (value: string) => {
+    const num = parseFloat(value) || 0;
+    setRepayWithCollateralAmount(Math.min(Math.max(0, num), maxRepay));
+  };
+
   const handleBorrowInputChange = (value: string) => {
     const num = parseFloat(value) || 0;
     // Use base + dynamic capacity for max
-    const maxBorrow = baseAvailableBorrow + addedCollateralValue + repayAmount;
+    const maxBorrow = baseAvailableBorrow + addedCollateralValue + repayAmount + repayWithCollateralAmount;
     setBorrowAmount(Math.min(Math.max(0, num), maxBorrow));
   };
 
@@ -222,6 +283,96 @@ export function ScenarioSimulator({
           <div className="flex justify-between text-xs text-cro-muted mt-1">
             <span className="font-mono">$0</span>
             <span className="font-mono">${formatNumber(maxRepay)}</span>
+          </div>
+        </div>
+
+        {/* Repay with Collateral */}
+        <div className="rounded-xl border border-cro-border/70 bg-cro-dark/40 p-4 space-y-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <label className="text-sm font-medium text-cro-text">
+                Repay with {assetSymbol} Collateral
+              </label>
+              <p className="text-xs text-cro-muted mt-1">
+                Main estimate matches the current quote. Slippage is shown separately as a worst-case execution scenario.
+              </p>
+            </div>
+            <div className="text-right text-xs text-cro-muted">
+              <div>
+                Quote: <span className="font-mono text-cro-text">{formatNumber(repayWithCollateralQuoteRate, 8)} {assetSymbol}/{borrowSymbol}</span>
+              </div>
+              <div>
+                Worst case @ {formatNumber(repayWithCollateralSlippage, 2)}%: <span className="font-mono text-cro-warning">{formatNumber(repayWithCollateralWorstCaseRate, 8)} {assetSymbol}/{borrowSymbol}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs uppercase tracking-wide text-cro-muted">Repay Amount</label>
+              <div className="mt-1 flex items-center gap-2">
+                <span className="text-sm text-cro-muted">$</span>
+                <input
+                  type="number"
+                  min="0"
+                  max={maxRepay}
+                  step="100"
+                  value={repayWithCollateralAmount || ''}
+                  onChange={(e) => handleRepayWithCollateralInputChange(e.target.value)}
+                  placeholder="0"
+                  className="w-full px-3 py-2 text-sm font-mono text-right border border-cro-border rounded bg-cro-dark text-cro-text focus:outline-none focus:ring-1 focus:ring-cro-cyan focus:border-cro-cyan"
+                />
+                <span className="text-sm text-cro-muted">{borrowSymbol}</span>
+              </div>
+            </div>
+            <div>
+              <label className="text-xs uppercase tracking-wide text-cro-muted">Slippage %</label>
+              <div className="mt-1 flex items-center gap-2">
+                <input
+                  type="number"
+                  min="0"
+                  max="10"
+                  step="0.1"
+                  value={repayWithCollateralSlippage}
+                  onChange={(e) => setRepayWithCollateralSlippage(Math.max(0, Number(e.target.value) || 0))}
+                  className="w-full px-3 py-2 text-sm font-mono text-right border border-cro-border rounded bg-cro-dark text-cro-text focus:outline-none focus:ring-1 focus:ring-cro-cyan focus:border-cro-cyan"
+                />
+                <span className="text-sm text-cro-muted">%</span>
+              </div>
+            </div>
+          </div>
+
+          <input
+            type="range"
+            min="0"
+            max={maxRepay}
+            step="100"
+            value={repayWithCollateralAmount}
+            onChange={(e) => setRepayWithCollateralAmount(Number(e.target.value))}
+            className="w-full h-2 bg-cro-border rounded-lg appearance-none cursor-pointer"
+          />
+          <div className="flex justify-between text-xs text-cro-muted">
+            <span className="font-mono">$0</span>
+            <span className="font-mono">${formatNumber(maxRepay)}</span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+            <div className="rounded-lg border border-cro-border bg-cro-card px-3 py-2">
+              <div className="text-cro-muted text-xs uppercase tracking-wide">Quoted {assetSymbol} Sold</div>
+              <div className="mt-1 font-mono text-cro-text">{formatNumber(repayWithCollateralSoldAmount, 4)} {assetSymbol}</div>
+            </div>
+            <div className="rounded-lg border border-cro-border bg-cro-card px-3 py-2">
+              <div className="text-cro-muted text-xs uppercase tracking-wide">Quoted {assetSymbol} Left</div>
+              <div className="mt-1 font-mono text-cro-text">{formatNumber(remainingCollateralAfterRepayWithCollateral, 4)} {assetSymbol}</div>
+            </div>
+            <div className="rounded-lg border border-cro-warning/40 bg-cro-warning/5 px-3 py-2">
+              <div className="text-cro-muted text-xs uppercase tracking-wide">Worst-case {assetSymbol} Sold</div>
+              <div className="mt-1 font-mono text-cro-warning">{formatNumber(repayWithCollateralWorstCaseSoldAmount, 4)} {assetSymbol}</div>
+            </div>
+            <div className="rounded-lg border border-cro-warning/40 bg-cro-warning/5 px-3 py-2">
+              <div className="text-cro-muted text-xs uppercase tracking-wide">Worst-case {assetSymbol} Left</div>
+              <div className="mt-1 font-mono text-cro-warning">{formatNumber(repayWithCollateralWorstCaseRemaining, 4)} {assetSymbol}</div>
+            </div>
           </div>
         </div>
 

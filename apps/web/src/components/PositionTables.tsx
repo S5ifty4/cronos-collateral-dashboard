@@ -91,9 +91,10 @@ export function PositionTables({
                 const amountDelta = original ? col.amount - original.amount : 0;
                 const valueDelta = original ? col.valueUsd - original.valueUsd : 0;
                 const hasChange = Math.abs(amountDelta) > 0.0001;
+                const isIncrease = amountDelta > 0;
 
                 return (
-                  <tr key={col.asset.symbol} className={`hover:bg-cro-card-light transition-colors ${hasChange ? 'bg-cro-success/5' : ''}`}>
+                  <tr key={col.asset.symbol} className={`hover:bg-cro-card-light transition-colors ${hasChange ? (isIncrease ? 'bg-cro-success/5' : 'bg-cro-danger/5') : ''}`}>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         {TOKEN_LOGOS[col.asset.symbol] ? (
@@ -109,7 +110,7 @@ export function PositionTables({
                         )}
                         <span className="font-medium text-cro-text">{col.asset.symbol}</span>
                         {hasChange && (
-                          <span className="text-xs px-1.5 py-0.5 bg-cro-success/20 text-cro-success rounded">
+                          <span className={`text-xs px-1.5 py-0.5 rounded ${isIncrease ? 'bg-cro-success/20 text-cro-success' : 'bg-cro-danger/20 text-cro-danger'}`}>
                             Simulated
                           </span>
                         )}
@@ -118,16 +119,16 @@ export function PositionTables({
                     <td className="px-4 py-3 text-right font-mono text-cro-text">
                       <div>{formatNumber(col.amount, 4)}</div>
                       {hasChange && (
-                        <div className="text-xs text-cro-success">
-                          +{formatNumber(amountDelta, 4)}
+                        <div className={`text-xs ${isIncrease ? 'text-cro-success' : 'text-cro-danger'}`}>
+                          {isIncrease ? '+' : ''}{formatNumber(amountDelta, 4)}
                         </div>
                       )}
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-cro-text">
                       <div>{formatUsd(col.valueUsd)}</div>
                       {hasChange && (
-                        <div className="text-xs text-cro-success">
-                          +{formatUsd(valueDelta)}
+                        <div className={`text-xs ${isIncrease ? 'text-cro-success' : 'text-cro-danger'}`}>
+                          {isIncrease ? '+' : ''}{formatUsd(valueDelta)}
                         </div>
                       )}
                     </td>

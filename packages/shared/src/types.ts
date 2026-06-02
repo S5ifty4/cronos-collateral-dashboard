@@ -79,6 +79,32 @@ export interface ScenarioResult {
   };
 }
 
+export interface RepayWithCollateralInput {
+  snapshot: ProtocolSnapshot;
+  prices: Record<string, number>;
+  borrowSymbol: string;
+  collateralSymbol: string;
+  repayAmount: number;
+  quoteCollateralPerBorrowUnit?: number;
+  slippagePct?: number;
+}
+
+export interface RepayWithCollateralWorstCase {
+  effectiveCollateralPerBorrowUnit: number;
+  collateralSoldAmount: number;
+  remainingCollateralAmount: number;
+  simulation: ScenarioResult;
+}
+
+export interface RepayWithCollateralResult {
+  quoteCollateralPerBorrowUnit: number;
+  effectiveCollateralPerBorrowUnit: number;
+  collateralSoldAmount: number;
+  remainingCollateralAmount: number;
+  simulation: ScenarioResult;
+  worstCase: RepayWithCollateralWorstCase;
+}
+
 // API request/response types
 export interface PortfolioRequest {
   address: string;

@@ -7,7 +7,7 @@ A DeFi risk dashboard for monitoring lending positions on Cronos, starting with 
 - Wallet connect (Cronos mainnet)
 - Read Tectonic supplied + borrowed balances
 - Compute Health Factor, CRO liquidation price, distance to liquidation
-- Scenario simulator: price shock, repay USDC, add CRO collateral
+- Scenario simulator: price shock, repay USDC, repay with collateral, add CRO collateral
 - Target HF helpers (e.g., reach HF 1.30)
 
 ## Project Structure
