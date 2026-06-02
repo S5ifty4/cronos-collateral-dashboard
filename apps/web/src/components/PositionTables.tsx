@@ -136,8 +136,8 @@ export function PositionTables({
                       {(col.liquidationThreshold * 100).toFixed(0)}%
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-sm text-cro-cyan whitespace-nowrap">
-                      {liquidationPrices[col.asset.symbol]
-                        ? formatUsd(liquidationPrices[col.asset.symbol])
+                      {liquidationPrices[col.asset.symbol] !== undefined && liquidationPrices[col.asset.symbol] !== null
+                        ? `$${formatNumber(liquidationPrices[col.asset.symbol], 3)}`
                         : '—'}
                     </td>
                   </tr>
