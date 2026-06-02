@@ -11,6 +11,7 @@ import { fetchPortfolio, fetchPrices } from '@/lib/api';
 import { KPICards } from './KPICards';
 import { PositionTables } from './PositionTables';
 import { ScenarioSimulator } from './ScenarioSimulator';
+import { RepayWithCollateralBox } from './RepayWithCollateralBox';
 import { TargetHFHelper } from './TargetHFHelper';
 
 // Fallback prices for demo mode (used if API fails)
@@ -451,9 +452,17 @@ export function Dashboard() {
         prices={activePortfolio.prices}
       />
 
-      {/* Simulator + Target Helper */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Simulator + Repay with Collateral + Target Helper */}
+      <div className="space-y-6">
         <ScenarioSimulator
+          snapshot={mainSnapshot}
+          prices={activePortfolio.prices}
+          onSimulationResult={setSimulationData}
+          collateralAsset={demoMode ? demoAsset : undefined}
+          borrowAsset={selectedLoan?.borrow.asset.symbol}
+          showRepayWithCollateral={false}
+        />
+        <RepayWithCollateralBox
           snapshot={mainSnapshot}
           prices={activePortfolio.prices}
           onSimulationResult={setSimulationData}

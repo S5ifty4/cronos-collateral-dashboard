@@ -26,6 +26,7 @@ interface ScenarioSimulatorProps {
   onSimulationResult?: (data: SimulationData | null) => void;
   collateralAsset?: string; // Symbol of the collateral asset (defaults to first collateral or 'CRO')
   borrowAsset?: string; // Symbol of the borrow asset to target (defaults to first borrow or 'USDC')
+  showRepayWithCollateral?: boolean;
 }
 
 function formatNumber(n: number, decimals = 2): string {
@@ -42,6 +43,7 @@ export function ScenarioSimulator({
   onSimulationResult,
   collateralAsset,
   borrowAsset,
+  showRepayWithCollateral = true,
 }: ScenarioSimulatorProps) {
   const [priceShock, setPriceShock] = useState(0);
   const [repayAmount, setRepayAmount] = useState(0);
@@ -287,6 +289,7 @@ export function ScenarioSimulator({
         </div>
 
         {/* Repay with Collateral */}
+        {showRepayWithCollateral && (
         <div className="rounded-xl border border-cro-border/70 bg-cro-dark/40 p-4 space-y-4">
           <div className="flex items-center justify-between gap-3">
             <div>
@@ -375,6 +378,7 @@ export function ScenarioSimulator({
             </div>
           </div>
         </div>
+        )}
 
         {/* Borrow More USDC */}
         <div>
