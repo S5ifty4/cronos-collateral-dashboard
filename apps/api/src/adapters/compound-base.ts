@@ -389,8 +389,9 @@ export function createCompoundAdapter(cfg: CompoundProtocolConfig) {
       // Merge: oracle prices take priority over fallback prices
       const effectivePrices = { ...prices, ...oraclePrices };
 
-      // Fetch data for all markets in parallel
-      const marketData = await Promise.all(
+      // Fetch data for all markets in parallel.
+      // Important: one flaky market/RPC response should not blank the entire wallet.
+      const marketResults = await Promise.allSettled(
         tTokenAddresses.map(async (tTokenAddr) => {
           const tToken = tTokenAddr as `0x${string}`;
           const info = tTokenMap[tTokenAddr];
@@ -416,6 +417,16 @@ export function createCompoundAdapter(cfg: CompoundProtocolConfig) {
           return { info, tTokenAddr, underlyingBalance, borrowBalanceNum, collateralFactor, isEnabled, price, ud };
         })
       );
+
+      const marketData = marketResults.flatMap((result, idx) => {
+        if (result.status === 'fulfilled') return [result.value];
+        console.warn(`[${cfg.name}] Skipping market ${tTokenAddresses[idx]} after read failure:`, result.reason);
+        return [];
+      });
+
+      if (marketData.length === 0 && tTokenAddresses.length > 0) {
+        throw new Error(`[${cfg.name}] All market reads failed for ${address}`);
+      }
 
       const collaterals: CollateralPosition[] = [];
       const borrows: BorrowPosition[] = [];
