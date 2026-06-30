@@ -11,6 +11,8 @@ import type {
   RepayWithCollateralInput,
   RepayWithCollateralResult,
   RepayWithCollateralWorstCase,
+  LiquidationScenarioInput,
+  LiquidationScenarioResult,
 } from './types.js';
 
 /**
@@ -351,6 +353,119 @@ export function simulateRepayWithCollateral(
     remainingCollateralAmount: quoteScenario.remainingCollateralAmount,
     simulation: quoteScenario.simulation,
     worstCase,
+  };
+}
+
+export function simulateLiquidationScenario(
+  input: LiquidationScenarioInput
+): LiquidationScenarioResult {
+  const {
+    snapshot,
+    prices,
+    borrowSymbol,
+    collateralSymbol,
+    collateralPriceChangePct = 0,
+    liquidationPenaltyPct = 10,
+    closeFactorPct = 50,
+    targetHealthFactor = 1.01,
+  } = input;
+
+  const priceShockAction: ScenarioAction = {
+    type: 'priceShock',
+    symbol: collateralSymbol,
+    pctChange: collateralPriceChangePct,
+  };
+  const shockedSimulation = collateralPriceChangePct !== 0
+    ? simulateScenario(snapshot, { actions: [priceShockAction] }, prices)
+    : simulateScenario(snapshot, { actions: [] }, prices);
+
+  const baseCollateralPrice = prices[collateralSymbol] || 0;
+  const collateralPrice = baseCollateralPrice * (1 + collateralPriceChangePct / 100);
+  const borrowPrice = prices[borrowSymbol] || 1;
+  const collateral = snapshot.collaterals.find(
+    (position) => position.asset.symbol === collateralSymbol && position.enabled
+  );
+  const borrow = snapshot.borrows.find(
+    (position) => position.asset.symbol === borrowSymbol
+  );
+  const totalBorrowUsd = shockedSimulation.simulated.totalBorrowUsd;
+  const weightedCollateralUsd = shockedSimulation.simulated.healthFactor * totalBorrowUsd;
+  const healthFactorBefore = shockedSimulation.simulated.healthFactor;
+  const atRisk = healthFactorBefore <= 1;
+  const currentCollateralAmount = collateral?.amount || 0;
+
+  const emptyResult: LiquidationScenarioResult = {
+    atRisk,
+    healthFactorBefore,
+    collateralPrice,
+    collateralPriceChangePct,
+    closeFactorPct,
+    liquidationPenaltyPct,
+    maxDebtRepayUsd: 0,
+    estimatedDebtRepaidUsd: 0,
+    collateralSeizedAmount: 0,
+    collateralSeizedUsd: 0,
+    penaltyCollateralAmount: 0,
+    penaltyUsd: 0,
+    remainingCollateralAmount: currentCollateralAmount,
+    healthFactorAfter: healthFactorBefore,
+    cappedByCloseFactor: false,
+    mayNeedAdditionalLiquidation: atRisk,
+    simulation: shockedSimulation,
+  };
+
+  if (!collateral || !borrow || collateralPrice <= 0 || totalBorrowUsd <= 0 || !isFinite(healthFactorBefore)) {
+    return emptyResult;
+  }
+
+  const penaltyMultiplier = 1 + liquidationPenaltyPct / 100;
+  const closeFactor = closeFactorPct / 100;
+  const maxDebtRepayUsd = Math.max(0, borrow.valueUsd * closeFactor);
+  const maxRepayByCollateralUsd = Math.max(0, (currentCollateralAmount * collateralPrice) / penaltyMultiplier);
+  const denominator = targetHealthFactor - penaltyMultiplier * collateral.liquidationThreshold;
+  const repayToTargetUsd = atRisk && denominator > 0
+    ? Math.max(0, (targetHealthFactor * totalBorrowUsd - weightedCollateralUsd) / denominator)
+    : 0;
+  const estimatedDebtRepaidUsd = atRisk
+    ? Math.min(maxDebtRepayUsd, maxRepayByCollateralUsd, repayToTargetUsd)
+    : 0;
+  const cappedByCloseFactor = atRisk && repayToTargetUsd > maxDebtRepayUsd;
+  const collateralSeizedUsd = estimatedDebtRepaidUsd * penaltyMultiplier;
+  const collateralSeizedAmount = collateralSeizedUsd / collateralPrice;
+  const penaltyUsd = estimatedDebtRepaidUsd * (liquidationPenaltyPct / 100);
+  const penaltyCollateralAmount = penaltyUsd / collateralPrice;
+  const remainingCollateralAmount = Math.max(0, currentCollateralAmount - collateralSeizedAmount);
+  const repayAmount = borrowPrice > 0 ? estimatedDebtRepaidUsd / borrowPrice : 0;
+
+  const actions: ScenarioAction[] = collateralPriceChangePct !== 0 ? [priceShockAction] : [];
+  if (estimatedDebtRepaidUsd > 0) {
+    actions.push(
+      { type: 'withdrawCollateral', symbol: collateralSymbol, amount: collateralSeizedAmount },
+      { type: 'repay', symbol: borrowSymbol, amount: repayAmount }
+    );
+  }
+
+  const simulation = simulateScenario(snapshot, { actions }, prices);
+  const healthFactorAfter = simulation.simulated.healthFactor;
+
+  return {
+    atRisk,
+    healthFactorBefore,
+    collateralPrice,
+    collateralPriceChangePct,
+    closeFactorPct,
+    liquidationPenaltyPct,
+    maxDebtRepayUsd,
+    estimatedDebtRepaidUsd,
+    collateralSeizedAmount,
+    collateralSeizedUsd,
+    penaltyCollateralAmount,
+    penaltyUsd,
+    remainingCollateralAmount,
+    healthFactorAfter,
+    cappedByCloseFactor,
+    mayNeedAdditionalLiquidation: atRisk && healthFactorAfter <= 1,
+    simulation,
   };
 }
 

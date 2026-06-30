@@ -105,6 +105,37 @@ export interface RepayWithCollateralResult {
   worstCase: RepayWithCollateralWorstCase;
 }
 
+export interface LiquidationScenarioInput {
+  snapshot: ProtocolSnapshot;
+  prices: Record<string, number>;
+  borrowSymbol: string;
+  collateralSymbol: string;
+  collateralPriceChangePct?: number;
+  liquidationPenaltyPct?: number;
+  closeFactorPct?: number;
+  targetHealthFactor?: number;
+}
+
+export interface LiquidationScenarioResult {
+  atRisk: boolean;
+  healthFactorBefore: number;
+  collateralPrice: number;
+  collateralPriceChangePct: number;
+  closeFactorPct: number;
+  liquidationPenaltyPct: number;
+  maxDebtRepayUsd: number;
+  estimatedDebtRepaidUsd: number;
+  collateralSeizedAmount: number;
+  collateralSeizedUsd: number;
+  penaltyCollateralAmount: number;
+  penaltyUsd: number;
+  remainingCollateralAmount: number;
+  healthFactorAfter: number;
+  cappedByCloseFactor: boolean;
+  mayNeedAdditionalLiquidation: boolean;
+  simulation: ScenarioResult;
+}
+
 // API request/response types
 export interface PortfolioRequest {
   address: string;

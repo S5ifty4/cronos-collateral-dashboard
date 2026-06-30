@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { simulateRepayWithCollateral } from '../dist/index.js';
+import { simulateLiquidationScenario, simulateRepayWithCollateral } from '../dist/index.js';
 
 const CRO_PRICE = 1 / 15.96492758;
 const TOTAL_BORROW_USD = 97_632.26;
@@ -105,4 +105,46 @@ test('simulateRepayWithCollateral returns a safe no-op result when the target bo
   approx(result.remainingCollateralAmount, CRO_AMOUNT);
   approx(result.simulation.simulated.totalBorrowUsd, TOTAL_BORROW_USD);
   approx(result.worstCase.collateralSoldAmount, 0);
+});
+
+test('simulateLiquidationScenario estimates CRO seized and penalty at an at-risk price', () => {
+  const result = simulateLiquidationScenario({
+    snapshot,
+    prices: { CRO: CRO_PRICE, USDC: 1 },
+    borrowSymbol: 'USDC',
+    collateralSymbol: 'CRO',
+    collateralPriceChangePct: -10,
+  });
+
+  const shockedCollateralUsd = TOTAL_COLLATERAL_USD * 0.9;
+  const shockedWeightedCollateralUsd = shockedCollateralUsd * LT;
+  const targetHF = 1.01;
+  const repayToRestoreHF = (targetHF * TOTAL_BORROW_USD - shockedWeightedCollateralUsd) / (targetHF - 1.1 * LT);
+  const shockedCroPrice = CRO_PRICE * 0.9;
+  const expectedCroSeized = (repayToRestoreHF * 1.1) / shockedCroPrice;
+
+  assert.equal(result.atRisk, true);
+  approx(result.healthFactorBefore, shockedWeightedCollateralUsd / TOTAL_BORROW_USD);
+  approx(result.estimatedDebtRepaidUsd, repayToRestoreHF);
+  approx(result.collateralSeizedAmount, expectedCroSeized);
+  approx(result.penaltyUsd, repayToRestoreHF * 0.1);
+  approx(result.penaltyCollateralAmount, (repayToRestoreHF * 0.1) / shockedCroPrice);
+  assert.equal(result.cappedByCloseFactor, false);
+  assert.equal(result.mayNeedAdditionalLiquidation, false);
+  assert.ok(result.healthFactorAfter >= 1);
+});
+
+test('simulateLiquidationScenario respects the close factor cap', () => {
+  const result = simulateLiquidationScenario({
+    snapshot,
+    prices: { CRO: CRO_PRICE, USDC: 1 },
+    borrowSymbol: 'USDC',
+    collateralSymbol: 'CRO',
+    collateralPriceChangePct: -35,
+  });
+
+  approx(result.maxDebtRepayUsd, TOTAL_BORROW_USD * 0.5);
+  approx(result.estimatedDebtRepaidUsd, TOTAL_BORROW_USD * 0.5);
+  assert.equal(result.cappedByCloseFactor, true);
+  assert.equal(result.mayNeedAdditionalLiquidation, true);
 });
