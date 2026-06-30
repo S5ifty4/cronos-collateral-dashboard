@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import type { ProtocolSnapshot } from '@cronos-dash/shared';
+import type { LiquidationScenarioOutcome, ProtocolSnapshot } from '@cronos-dash/shared';
 import { simulateLiquidationScenario } from '@cronos-dash/shared';
 
 interface LiquidationScenarioBoxProps {
@@ -22,6 +22,58 @@ function formatNumber(n: number, decimals = 2): string {
 function formatHF(n: number): string {
   if (!isFinite(n)) return '∞';
   return n.toFixed(2);
+}
+
+function OutcomeCard({
+  title,
+  subtitle,
+  outcome,
+  assetSymbol,
+  emphasize,
+}: {
+  title: string;
+  subtitle: string;
+  outcome: LiquidationScenarioOutcome;
+  assetSymbol: string;
+  emphasize?: boolean;
+}) {
+  return (
+    <div className={`rounded-lg border p-3 ${emphasize ? 'border-cro-danger/50 bg-cro-danger/5' : 'border-cro-border bg-cro-dark/40'}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="font-semibold text-cro-text">{title}</div>
+          <div className="text-xs text-cro-muted mt-0.5">{subtitle}</div>
+        </div>
+        <div className={`text-xs rounded px-2 py-1 ${outcome.mayNeedAdditionalLiquidation ? 'bg-cro-danger/10 text-cro-danger' : 'bg-cro-success/10 text-cro-success'}`}>
+          {outcome.mayNeedAdditionalLiquidation ? 'Repeat risk' : 'HF > 1'}
+        </div>
+      </div>
+
+      <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+        <div>
+          <div className="text-cro-muted text-xs uppercase tracking-wide">Debt Repaid</div>
+          <div className="font-mono text-cro-text">${formatNumber(outcome.debtRepaidUsd)}</div>
+        </div>
+        <div>
+          <div className="text-cro-muted text-xs uppercase tracking-wide">{assetSymbol} Seized</div>
+          <div className="font-mono text-cro-danger">{formatNumber(outcome.collateralSeizedAmount, 4)}</div>
+        </div>
+        <div>
+          <div className="text-cro-muted text-xs uppercase tracking-wide">Penalty Cost</div>
+          <div className="font-mono text-cro-warning">{formatNumber(outcome.penaltyCollateralAmount, 4)} {assetSymbol}</div>
+          <div className="text-xs text-cro-muted">${formatNumber(outcome.penaltyUsd)}</div>
+        </div>
+        <div>
+          <div className="text-cro-muted text-xs uppercase tracking-wide">HF After</div>
+          <div className="font-mono text-cro-text">{formatHF(outcome.healthFactorAfter)}</div>
+        </div>
+      </div>
+
+      <div className="mt-2 text-xs text-cro-muted">
+        {assetSymbol} left: <span className="font-mono text-cro-text">{formatNumber(outcome.remainingCollateralAmount, 4)}</span>
+      </div>
+    </div>
+  );
 }
 
 export function LiquidationScenarioBox({
@@ -65,7 +117,7 @@ export function LiquidationScenarioBox({
         <div>
           <h3 className="font-semibold text-cro-text">Liquidation Loss Scenario</h3>
           <p className="text-xs text-cro-muted mt-1">
-            Estimates the first liquidation using Tectonic docs defaults: close factor caps debt repaid and a liquidation penalty is taken from collateral.
+            Shows both the minimum restore estimate and the more conservative max close-factor case. Your history matched max close-factor behavior.
           </p>
         </div>
         <button
@@ -149,7 +201,7 @@ export function LiquidationScenarioBox({
         <div className={`rounded-lg border px-3 py-2 text-sm ${scenario.atRisk ? 'border-cro-danger/50 bg-cro-danger/5' : 'border-cro-border bg-cro-dark/40'}`}>
           {scenario.atRisk ? (
             <span className="text-cro-danger font-medium">
-              Liquidatable at this price. Estimated first liquidation below.
+              Liquidatable at this price. Compare the docs-style minimum estimate vs max close-factor liquidation.
             </span>
           ) : (
             <span className="text-cro-muted">
@@ -158,40 +210,24 @@ export function LiquidationScenarioBox({
           )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
-          <div className="rounded-lg border border-cro-border bg-cro-dark/40 px-3 py-2">
-            <div className="text-cro-muted text-xs uppercase tracking-wide">Debt Repaid</div>
-            <div className="mt-1 font-mono text-cro-text">${formatNumber(scenario.estimatedDebtRepaidUsd)}</div>
-            <div className="text-xs text-cro-muted mt-1">Max close: ${formatNumber(scenario.maxDebtRepayUsd)}</div>
-          </div>
-          <div className="rounded-lg border border-cro-danger/40 bg-cro-danger/5 px-3 py-2">
-            <div className="text-cro-muted text-xs uppercase tracking-wide">{assetSymbol} Seized</div>
-            <div className="mt-1 font-mono text-cro-danger">{formatNumber(scenario.collateralSeizedAmount, 4)} {assetSymbol}</div>
-            <div className="text-xs text-cro-muted mt-1">${formatNumber(scenario.collateralSeizedUsd)} value</div>
-          </div>
-          <div className="rounded-lg border border-cro-warning/40 bg-cro-warning/5 px-3 py-2">
-            <div className="text-cro-muted text-xs uppercase tracking-wide">Penalty Cost</div>
-            <div className="mt-1 font-mono text-cro-warning">{formatNumber(scenario.penaltyCollateralAmount, 4)} {assetSymbol}</div>
-            <div className="text-xs text-cro-muted mt-1">${formatNumber(scenario.penaltyUsd)}</div>
-          </div>
-          <div className="rounded-lg border border-cro-border bg-cro-dark/40 px-3 py-2">
-            <div className="text-cro-muted text-xs uppercase tracking-wide">{assetSymbol} Left</div>
-            <div className="mt-1 font-mono text-cro-text">{formatNumber(scenario.remainingCollateralAmount, 4)} {assetSymbol}</div>
-          </div>
-          <div className="rounded-lg border border-cro-border bg-cro-dark/40 px-3 py-2">
-            <div className="text-cro-muted text-xs uppercase tracking-wide">HF Before → After</div>
-            <div className="mt-1 font-mono text-cro-text">{formatHF(scenario.healthFactorBefore)} → {formatHF(scenario.healthFactorAfter)}</div>
-          </div>
-          <div className={`rounded-lg border px-3 py-2 ${scenario.mayNeedAdditionalLiquidation ? 'border-cro-danger/40 bg-cro-danger/5' : 'border-cro-border bg-cro-dark/40'}`}>
-            <div className="text-cro-muted text-xs uppercase tracking-wide">Follow-up Risk</div>
-            <div className={`mt-1 font-medium ${scenario.mayNeedAdditionalLiquidation ? 'text-cro-danger' : 'text-cro-success'}`}>
-              {scenario.mayNeedAdditionalLiquidation ? 'May need another liquidation' : 'Likely restored above HF 1'}
-            </div>
-          </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          <OutcomeCard
+            title="Minimum Restore Estimate"
+            subtitle="Repays only enough to target HF ≈ 1.01, capped by close factor. Useful lower-bound estimate."
+            outcome={scenario.minimumToRestore}
+            assetSymbol={assetSymbol}
+          />
+          <OutcomeCard
+            title="Max Close-Factor Estimate"
+            subtitle="Repays the full selected-debt close factor. This matched your prior liquidation pattern."
+            outcome={scenario.maxCloseFactor}
+            assetSymbol={assetSymbol}
+            emphasize
+          />
         </div>
 
         <p className="text-xs text-cro-muted">
-          Estimate only. Actual liquidation depends on live oracle prices, selected debt/collateral pair, on-chain parameters, and liquidator execution.
+          Estimate only. Tectonic exposes close factor and penalty; it does not publish a fixed post-liquidation HF target. Actual execution depends on oracle price, selected debt/collateral pair, on-chain params, and liquidator behavior.
         </p>
       </div>
     </div>

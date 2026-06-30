@@ -116,6 +116,23 @@ export interface LiquidationScenarioInput {
   targetHealthFactor?: number;
 }
 
+export type LiquidationScenarioMode = 'minimumToRestore' | 'maxCloseFactor';
+
+export interface LiquidationScenarioOutcome {
+  mode: LiquidationScenarioMode;
+  label: string;
+  debtRepaidUsd: number;
+  collateralSeizedAmount: number;
+  collateralSeizedUsd: number;
+  penaltyCollateralAmount: number;
+  penaltyUsd: number;
+  remainingCollateralAmount: number;
+  healthFactorAfter: number;
+  cappedByCloseFactor: boolean;
+  mayNeedAdditionalLiquidation: boolean;
+  simulation: ScenarioResult;
+}
+
 export interface LiquidationScenarioResult {
   atRisk: boolean;
   healthFactorBefore: number;
@@ -124,6 +141,9 @@ export interface LiquidationScenarioResult {
   closeFactorPct: number;
   liquidationPenaltyPct: number;
   maxDebtRepayUsd: number;
+  repayToTargetUsd: number;
+  minimumToRestore: LiquidationScenarioOutcome;
+  maxCloseFactor: LiquidationScenarioOutcome;
   estimatedDebtRepaidUsd: number;
   collateralSeizedAmount: number;
   collateralSeizedUsd: number;
@@ -134,6 +154,33 @@ export interface LiquidationScenarioResult {
   cappedByCloseFactor: boolean;
   mayNeedAdditionalLiquidation: boolean;
   simulation: ScenarioResult;
+}
+
+export interface LiquidationHistoryEvent {
+  id: string;
+  txHash: string;
+  blockNumber: number;
+  blockTime: number;
+  isoTime: string;
+  borrower: string;
+  liquidator: string;
+  tTokenSymbol: string;
+  collateralSymbol: string;
+  seizedTTokenAmount: number;
+  estimatedCollateralAmount?: number;
+  debtSymbol: string;
+  debtRepaidAmount: number;
+  impliedCollateralPriceUsd?: number;
+  penaltyUsd?: number;
+  penaltyCollateralAmount?: number;
+}
+
+export interface LiquidationHistoryResponse {
+  address: string;
+  events: LiquidationHistoryEvent[];
+  count: number;
+  source: string;
+  note?: string;
 }
 
 // API request/response types

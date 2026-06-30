@@ -13,6 +13,7 @@ import { PositionTables } from './PositionTables';
 import { ScenarioSimulator } from './ScenarioSimulator';
 import { RepayWithCollateralBox } from './RepayWithCollateralBox';
 import { LiquidationScenarioBox } from './LiquidationScenarioBox';
+import { LiquidationHistoryBox } from './LiquidationHistoryBox';
 import { TargetHFHelper } from './TargetHFHelper';
 
 // Fallback prices for demo mode (used if API fails)
@@ -476,6 +477,7 @@ export function Dashboard() {
           collateralAsset={demoMode ? demoAsset : undefined}
           borrowAsset={selectedLoan?.borrow.asset.symbol}
         />
+        {!demoMode && <LiquidationHistoryBox address={address} />}
         <TargetHFHelper
           snapshot={mainSnapshot}
           prices={activePortfolio.prices}

@@ -132,6 +132,9 @@ test('simulateLiquidationScenario estimates CRO seized and penalty at an at-risk
   assert.equal(result.cappedByCloseFactor, false);
   assert.equal(result.mayNeedAdditionalLiquidation, false);
   assert.ok(result.healthFactorAfter >= 1);
+  approx(result.minimumToRestore.debtRepaidUsd, repayToRestoreHF);
+  approx(result.maxCloseFactor.debtRepaidUsd, TOTAL_BORROW_USD * 0.5);
+  assert.ok(result.maxCloseFactor.collateralSeizedAmount > result.minimumToRestore.collateralSeizedAmount);
 });
 
 test('simulateLiquidationScenario respects the close factor cap', () => {

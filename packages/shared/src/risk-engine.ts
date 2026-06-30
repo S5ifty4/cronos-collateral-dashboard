@@ -394,6 +394,24 @@ export function simulateLiquidationScenario(
   const atRisk = healthFactorBefore <= 1;
   const currentCollateralAmount = collateral?.amount || 0;
 
+  const buildEmptyOutcome = (mode: 'minimumToRestore' | 'maxCloseFactor', label: string) => ({
+    mode,
+    label,
+    debtRepaidUsd: 0,
+    collateralSeizedAmount: 0,
+    collateralSeizedUsd: 0,
+    penaltyCollateralAmount: 0,
+    penaltyUsd: 0,
+    remainingCollateralAmount: currentCollateralAmount,
+    healthFactorAfter: healthFactorBefore,
+    cappedByCloseFactor: false,
+    mayNeedAdditionalLiquidation: atRisk,
+    simulation: shockedSimulation,
+  });
+
+  const emptyMinimum = buildEmptyOutcome('minimumToRestore', 'Minimum restore-to-healthy');
+  const emptyMax = buildEmptyOutcome('maxCloseFactor', 'Max close-factor');
+
   const emptyResult: LiquidationScenarioResult = {
     atRisk,
     healthFactorBefore,
@@ -402,6 +420,9 @@ export function simulateLiquidationScenario(
     closeFactorPct,
     liquidationPenaltyPct,
     maxDebtRepayUsd: 0,
+    repayToTargetUsd: 0,
+    minimumToRestore: emptyMinimum,
+    maxCloseFactor: emptyMax,
     estimatedDebtRepaidUsd: 0,
     collateralSeizedAmount: 0,
     collateralSeizedUsd: 0,
@@ -418,7 +439,8 @@ export function simulateLiquidationScenario(
     return emptyResult;
   }
 
-  const penaltyMultiplier = 1 + liquidationPenaltyPct / 100;
+  const penaltyRate = liquidationPenaltyPct / 100;
+  const penaltyMultiplier = 1 + penaltyRate;
   const closeFactor = closeFactorPct / 100;
   const maxDebtRepayUsd = Math.max(0, borrow.valueUsd * closeFactor);
   const maxRepayByCollateralUsd = Math.max(0, (currentCollateralAmount * collateralPrice) / penaltyMultiplier);
@@ -426,28 +448,61 @@ export function simulateLiquidationScenario(
   const repayToTargetUsd = atRisk && denominator > 0
     ? Math.max(0, (targetHealthFactor * totalBorrowUsd - weightedCollateralUsd) / denominator)
     : 0;
-  const estimatedDebtRepaidUsd = atRisk
-    ? Math.min(maxDebtRepayUsd, maxRepayByCollateralUsd, repayToTargetUsd)
-    : 0;
-  const cappedByCloseFactor = atRisk && repayToTargetUsd > maxDebtRepayUsd;
-  const collateralSeizedUsd = estimatedDebtRepaidUsd * penaltyMultiplier;
-  const collateralSeizedAmount = collateralSeizedUsd / collateralPrice;
-  const penaltyUsd = estimatedDebtRepaidUsd * (liquidationPenaltyPct / 100);
-  const penaltyCollateralAmount = penaltyUsd / collateralPrice;
-  const remainingCollateralAmount = Math.max(0, currentCollateralAmount - collateralSeizedAmount);
-  const repayAmount = borrowPrice > 0 ? estimatedDebtRepaidUsd / borrowPrice : 0;
 
-  const actions: ScenarioAction[] = collateralPriceChangePct !== 0 ? [priceShockAction] : [];
-  if (estimatedDebtRepaidUsd > 0) {
-    actions.push(
-      { type: 'withdrawCollateral', symbol: collateralSymbol, amount: collateralSeizedAmount },
-      { type: 'repay', symbol: borrowSymbol, amount: repayAmount }
-    );
-  }
+  const buildOutcome = (
+    mode: 'minimumToRestore' | 'maxCloseFactor',
+    label: string,
+    desiredDebtRepayUsd: number
+  ) => {
+    const debtRepaidUsd = atRisk
+      ? Math.min(maxDebtRepayUsd, maxRepayByCollateralUsd, Math.max(0, desiredDebtRepayUsd))
+      : 0;
+    const collateralSeizedUsd = debtRepaidUsd * penaltyMultiplier;
+    const collateralSeizedAmount = collateralSeizedUsd / collateralPrice;
+    const penaltyUsd = debtRepaidUsd * penaltyRate;
+    const penaltyCollateralAmount = penaltyUsd / collateralPrice;
+    const remainingCollateralAmount = Math.max(0, currentCollateralAmount - collateralSeizedAmount);
+    const repayAmount = borrowPrice > 0 ? debtRepaidUsd / borrowPrice : 0;
+    const actions: ScenarioAction[] = collateralPriceChangePct !== 0 ? [priceShockAction] : [];
 
-  const simulation = simulateScenario(snapshot, { actions }, prices);
-  const healthFactorAfter = simulation.simulated.healthFactor;
+    if (debtRepaidUsd > 0) {
+      actions.push(
+        { type: 'withdrawCollateral', symbol: collateralSymbol, amount: collateralSeizedAmount },
+        { type: 'repay', symbol: borrowSymbol, amount: repayAmount }
+      );
+    }
 
+    const simulation = simulateScenario(snapshot, { actions }, prices);
+    const healthFactorAfter = simulation.simulated.healthFactor;
+
+    return {
+      mode,
+      label,
+      debtRepaidUsd,
+      collateralSeizedAmount,
+      collateralSeizedUsd,
+      penaltyCollateralAmount,
+      penaltyUsd,
+      remainingCollateralAmount,
+      healthFactorAfter,
+      cappedByCloseFactor: atRisk && desiredDebtRepayUsd > maxDebtRepayUsd,
+      mayNeedAdditionalLiquidation: atRisk && healthFactorAfter <= 1,
+      simulation,
+    };
+  };
+
+  const minimumToRestore = buildOutcome(
+    'minimumToRestore',
+    `Minimum restore-to-HF ${targetHealthFactor.toFixed(2)}`,
+    repayToTargetUsd
+  );
+  const maxCloseFactor = buildOutcome(
+    'maxCloseFactor',
+    'Max close-factor liquidation',
+    maxDebtRepayUsd
+  );
+
+  // Backward-compatible top-level fields keep the older minimum-restore estimate.
   return {
     atRisk,
     healthFactorBefore,
@@ -456,16 +511,19 @@ export function simulateLiquidationScenario(
     closeFactorPct,
     liquidationPenaltyPct,
     maxDebtRepayUsd,
-    estimatedDebtRepaidUsd,
-    collateralSeizedAmount,
-    collateralSeizedUsd,
-    penaltyCollateralAmount,
-    penaltyUsd,
-    remainingCollateralAmount,
-    healthFactorAfter,
-    cappedByCloseFactor,
-    mayNeedAdditionalLiquidation: atRisk && healthFactorAfter <= 1,
-    simulation,
+    repayToTargetUsd,
+    minimumToRestore,
+    maxCloseFactor,
+    estimatedDebtRepaidUsd: minimumToRestore.debtRepaidUsd,
+    collateralSeizedAmount: minimumToRestore.collateralSeizedAmount,
+    collateralSeizedUsd: minimumToRestore.collateralSeizedUsd,
+    penaltyCollateralAmount: minimumToRestore.penaltyCollateralAmount,
+    penaltyUsd: minimumToRestore.penaltyUsd,
+    remainingCollateralAmount: minimumToRestore.remainingCollateralAmount,
+    healthFactorAfter: minimumToRestore.healthFactorAfter,
+    cappedByCloseFactor: minimumToRestore.cappedByCloseFactor,
+    mayNeedAdditionalLiquidation: minimumToRestore.mayNeedAdditionalLiquidation,
+    simulation: minimumToRestore.simulation,
   };
 }
 
