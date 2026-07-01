@@ -86,9 +86,6 @@ export function RepayWithCollateralBox({
               Estimates how much selected collateral would be sold to repay the selected debt. The main estimate uses the quoted exchange rate; slippage is separated into a worst-case line so it does not distort the expected Tectonic-style quote.
             </InfoTooltip>
           </div>
-          <p className="text-xs text-cro-muted mt-1">
-            Main estimate matches the current quote. Slippage is shown separately as a worst-case execution scenario.
-          </p>
         </div>
         <button
           onClick={() => {

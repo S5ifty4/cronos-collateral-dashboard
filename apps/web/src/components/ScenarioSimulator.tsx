@@ -302,9 +302,6 @@ export function ScenarioSimulator({
               <label className="text-sm font-medium text-cro-text">
                 Repay with {assetSymbol} Collateral
               </label>
-              <p className="text-xs text-cro-muted mt-1">
-                Main estimate matches the current quote. Slippage is shown separately as a worst-case execution scenario.
-              </p>
             </div>
             <div className="text-right text-xs text-cro-muted">
               <div>

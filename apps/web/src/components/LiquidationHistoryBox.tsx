@@ -49,9 +49,6 @@ export function LiquidationHistoryBox({ address }: LiquidationHistoryBoxProps) {
               Loads prior liquidation events for the connected wallet from Tectonic's public subgraph. Collateral amounts are approximate because tToken exchange rates are converted with current market data, not exact historical block rates.
             </InfoTooltip>
           </div>
-          <p className="text-xs text-cro-muted mt-1">
-            Review prior liquidation events for this wallet. Loaded only on demand to keep the dashboard fast.
-          </p>
         </div>
         <button
           type="button"

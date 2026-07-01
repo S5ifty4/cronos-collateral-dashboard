@@ -122,9 +122,6 @@ export function LiquidationScenarioBox({
               Estimate only. Tectonic publishes close factor and liquidation penalty, but not a fixed post-liquidation health-factor target. Actual liquidation execution depends on oracle price, selected debt/collateral pair, on-chain params, and liquidator behavior.
             </InfoTooltip>
           </div>
-          <p className="text-xs text-cro-muted mt-1">
-            Estimate only. Tectonic exposes close factor and penalty; it does not publish a fixed post-liquidation HF target. Actual execution depends on oracle price, selected debt/collateral pair, on-chain params, and liquidator behavior.
-          </p>
         </div>
         <button
           onClick={() => {
