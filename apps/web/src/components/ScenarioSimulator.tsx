@@ -10,6 +10,7 @@ import {
   simulateScenario as simulateLocal,
   simulateRepayWithCollateral,
 } from '@cronos-dash/shared';
+import { InfoTooltip } from './InfoTooltip';
 
 export interface SimulationData {
   result: ScenarioResult;
@@ -206,7 +207,12 @@ export function ScenarioSimulator({
   return (
     <div className="bg-cro-card rounded-xl border border-cro-border p-4">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-cro-text">Scenario Simulator</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="font-semibold text-cro-text">Scenario Simulator</h3>
+          <InfoTooltip label="About the scenario simulator">
+            Preview how price moves, repayments, new borrows, or added collateral would change the displayed health factor and liquidation price. These are planning estimates and do not submit transactions.
+          </InfoTooltip>
+        </div>
         <button
           onClick={resetScenario}
           className="text-sm text-cro-cyan hover:underline"

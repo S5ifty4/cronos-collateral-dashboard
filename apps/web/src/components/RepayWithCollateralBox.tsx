@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import type { ProtocolSnapshot } from '@cronos-dash/shared';
 import { simulateRepayWithCollateral } from '@cronos-dash/shared';
 import type { SimulationData } from './ScenarioSimulator';
+import { InfoTooltip } from './InfoTooltip';
 
 interface RepayWithCollateralBoxProps {
   snapshot: ProtocolSnapshot;
@@ -77,9 +78,14 @@ export function RepayWithCollateralBox({
 
   return (
     <div className="bg-cro-card rounded-xl border border-cro-border p-4">
-      <div className="flex items-center justify-between mb-4 gap-3">
+      <div className="flex items-start justify-between mb-4 gap-3">
         <div>
-          <h3 className="font-semibold text-cro-text">Repay with Collateral</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-cro-text">Repay with Collateral</h3>
+            <InfoTooltip label="About repay with collateral">
+              Estimates how much selected collateral would be sold to repay the selected debt. The main estimate uses the quoted exchange rate; slippage is separated into a worst-case line so it does not distort the expected Tectonic-style quote.
+            </InfoTooltip>
+          </div>
           <p className="text-xs text-cro-muted mt-1">
             Main estimate matches the current quote. Slippage is shown separately as a worst-case execution scenario.
           </p>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import type { ProtocolSnapshot } from '@cronos-dash/shared';
 import { calculateTargetHF } from '@cronos-dash/shared';
+import { InfoTooltip } from './InfoTooltip';
 
 interface TargetHFHelperProps {
   snapshot: ProtocolSnapshot;
@@ -65,7 +66,12 @@ export function TargetHFHelper({
 
   return (
     <div className="bg-cro-card rounded-xl border border-cro-border p-4">
-      <h3 className="font-semibold text-cro-text mb-4">Target HF</h3>
+      <div className="mb-4 flex items-center gap-2">
+        <h3 className="font-semibold text-cro-text">Target HF</h3>
+        <InfoTooltip label="About target health factor">
+          Choose a safer borrow-limit-used percentage and estimate either how much debt to repay or how much collateral to add. Lower percentages map to higher health factors.
+        </InfoTooltip>
+      </div>
 
       <div className="mb-4">
         <div className="flex justify-between mb-2">
@@ -104,7 +110,7 @@ export function TargetHFHelper({
 
       {targetPercent >= currentPercent ? (
         <div className="p-3 bg-cro-success/10 border border-cro-success/30 rounded-lg text-sm text-cro-success">
-          Your current HF (<span className="font-mono">{formatNumber(currentPercent, 1)}%</span>) is already at or below target.
+          Your current borrow-limit used (<span className="font-mono">{formatNumber(currentPercent, 1)}%</span>) is already at or below target.
         </div>
       ) : result ? (
         <div className="space-y-3">

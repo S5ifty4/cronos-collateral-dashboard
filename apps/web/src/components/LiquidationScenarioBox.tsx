@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { LiquidationScenarioOutcome, ProtocolSnapshot } from '@cronos-dash/shared';
 import { simulateLiquidationScenario } from '@cronos-dash/shared';
+import { InfoTooltip } from './InfoTooltip';
 
 interface LiquidationScenarioBoxProps {
   snapshot: ProtocolSnapshot;
@@ -113,11 +114,16 @@ export function LiquidationScenarioBox({
 
   return (
     <div className="bg-cro-card rounded-xl border border-cro-border p-4">
-      <div className="flex items-center justify-between mb-4 gap-3">
+      <div className="flex items-start justify-between mb-4 gap-3">
         <div>
-          <h3 className="font-semibold text-cro-text">Liquidation Loss Scenario</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-cro-text">Liquidation Loss Scenario</h3>
+            <InfoTooltip label="About liquidation loss estimates">
+              Estimate only. Tectonic publishes close factor and liquidation penalty, but not a fixed post-liquidation health-factor target. Actual liquidation execution depends on oracle price, selected debt/collateral pair, on-chain params, and liquidator behavior.
+            </InfoTooltip>
+          </div>
           <p className="text-xs text-cro-muted mt-1">
-            Shows both the minimum restore estimate and the more conservative max close-factor case. Your history matched max close-factor behavior.
+            Estimate only. Tectonic exposes close factor and penalty; it does not publish a fixed post-liquidation HF target. Actual execution depends on oracle price, selected debt/collateral pair, on-chain params, and liquidator behavior.
           </p>
         </div>
         <button
@@ -201,7 +207,7 @@ export function LiquidationScenarioBox({
         <div className={`rounded-lg border px-3 py-2 text-sm ${scenario.atRisk ? 'border-cro-danger/50 bg-cro-danger/5' : 'border-cro-border bg-cro-dark/40'}`}>
           {scenario.atRisk ? (
             <span className="text-cro-danger font-medium">
-              Liquidatable at this price. Compare the docs-style minimum estimate vs max close-factor liquidation.
+              Liquidatable at this price. Showing the max close-factor estimate because it is the conservative case and matched observed Tectonic behavior.
             </span>
           ) : (
             <span className="text-cro-muted">
@@ -210,25 +216,15 @@ export function LiquidationScenarioBox({
           )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          <OutcomeCard
-            title="Minimum Restore Estimate"
-            subtitle="Repays only enough to target HF ≈ 1.01, capped by close factor. Useful lower-bound estimate."
-            outcome={scenario.minimumToRestore}
-            assetSymbol={assetSymbol}
-          />
+        <div className="grid grid-cols-1 gap-3">
           <OutcomeCard
             title="Max Close-Factor Estimate"
-            subtitle="Repays the full selected-debt close factor. This matched your prior liquidation pattern."
+            subtitle="Repays the full selected-debt close factor, capped by available collateral. Use this as the planning estimate for a first liquidation event."
             outcome={scenario.maxCloseFactor}
             assetSymbol={assetSymbol}
             emphasize
           />
         </div>
-
-        <p className="text-xs text-cro-muted">
-          Estimate only. Tectonic exposes close factor and penalty; it does not publish a fixed post-liquidation HF target. Actual execution depends on oracle price, selected debt/collateral pair, on-chain params, and liquidator behavior.
-        </p>
       </div>
     </div>
   );
