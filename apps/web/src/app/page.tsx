@@ -109,9 +109,19 @@ export default function Home() {
               any decisions. This tool is read-only and never submits transactions or requests wallet signing.
             </p>
             <strong className="text-xs text-cro-muted">Not financial advice. Use at your own risk.</strong>
-            <a href="/terms" className="text-xs text-cro-cyan hover:underline">
-              Terms of Use
-            </a>
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs">
+              <a href="/terms" className="text-cro-cyan hover:underline">
+                Terms of Use
+              </a>
+              <a
+                href="https://tectonic.gitbook.io/docs/protocol/liquidation-mechanism"
+                target="_blank"
+                rel="noreferrer"
+                className="text-cro-cyan hover:underline"
+              >
+                Tectonic Protocol Docs
+              </a>
+            </div>
           </div>
         </div>
       </footer>
