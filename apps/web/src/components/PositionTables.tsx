@@ -22,6 +22,13 @@ function formatUsd(n: number): string {
   return `$${formatNumber(n)}`;
 }
 
+function formatTokenAmount(n: number): string {
+  const abs = Math.abs(n);
+  if (abs >= 1000) return formatNumber(n, 2);
+  if (abs >= 1) return formatNumber(n, 4);
+  return formatNumber(n, 6);
+}
+
 // Token logo URLs
 // Logos bundled locally — avoids external CDN blocking/rate-limiting
 const TOKEN_LOGOS: Record<string, string> = {
@@ -81,7 +88,7 @@ export function PositionTables({
                 <th className="px-4 py-3">Asset</th>
                 <th className="px-4 py-3 text-right">Amount</th>
                 <th className="px-4 py-3 text-right">Value</th>
-                <th className="px-4 py-3 text-right">LT</th>
+                <th className="px-4 py-3 text-right">Liq.&nbsp;Threshold</th>
                 <th className="px-4 py-3 text-right">Liq.&nbsp;Price</th>
               </tr>
             </thead>
@@ -117,10 +124,10 @@ export function PositionTables({
                       </div>
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-cro-text">
-                      <div>{formatNumber(col.amount, 4)}</div>
+                      <div>{formatTokenAmount(col.amount)}</div>
                       {hasChange && (
                         <div className={`text-xs ${isIncrease ? 'text-cro-success' : 'text-cro-danger'}`}>
-                          {isIncrease ? '+' : ''}{formatNumber(amountDelta, 4)}
+                          {isIncrease ? '+' : ''}{formatTokenAmount(amountDelta)}
                         </div>
                       )}
                     </td>
@@ -201,10 +208,10 @@ export function PositionTables({
                       </div>
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-cro-text">
-                      <div>{formatNumber(bor.amount, 4)}</div>
+                      <div>{formatTokenAmount(bor.amount)}</div>
                       {hasChange && (
                         <div className={`text-xs ${isIncrease ? 'text-cro-warning' : 'text-cro-success'}`}>
-                          {isIncrease ? '+' : ''}{formatNumber(amountDelta, 4)}
+                          {isIncrease ? '+' : ''}{formatTokenAmount(amountDelta)}
                         </div>
                       )}
                     </td>

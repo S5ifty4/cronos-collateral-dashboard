@@ -105,10 +105,41 @@ function createDemoPortfolio(prices: Record<string, number>, collateralAmount: n
   };
 }
 
+function formatSummaryNumber(n: number, decimals = 0): string {
+  return n.toLocaleString(undefined, {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  });
+}
+
+function buildSimulationSummary(data: SimulationData | null): string | null {
+  if (!data) return null;
+  const parts: string[] = [];
+
+  for (const [symbol, pct] of Object.entries(data.priceShocks)) {
+    parts.push(`${symbol} ${pct >= 0 ? '+' : ''}${formatSummaryNumber(pct, 1)}%`);
+  }
+  for (const [symbol, amount] of Object.entries(data.repaid)) {
+    parts.push(`Repay ${formatSummaryNumber(amount)} ${symbol}`);
+  }
+  for (const [symbol, amount] of Object.entries(data.addedBorrow)) {
+    parts.push(`Borrow ${formatSummaryNumber(amount)} ${symbol}`);
+  }
+  for (const [symbol, amount] of Object.entries(data.addedCollateral)) {
+    parts.push(`Add ${formatSummaryNumber(amount)} ${symbol}`);
+  }
+  for (const [symbol, amount] of Object.entries(data.withdrawnCollateral)) {
+    parts.push(`Use ${formatSummaryNumber(amount)} ${symbol} collateral`);
+  }
+
+  return parts.length > 0 ? parts.join(' · ') : null;
+}
+
 export function Dashboard() {
   const router = useRouter();
   const { address, isConnected } = useAccount();
   const [simulationData, setSimulationData] = useState<SimulationData | null>(null);
+  const [simulationResetKey, setSimulationResetKey] = useState(0);
   const [mounted, setMounted] = useState(false);
   const [demoMode, setDemoMode] = useState(false);
   const [demoCollateral, setDemoCollateral] = useState(500000);
@@ -275,6 +306,11 @@ export function Dashboard() {
   const displayCollateral = simulationResult
     ? simulationResult.simulated.totalCollateralUsd
     : mainSnapshot.totals.collateralUsd;
+  const activeSimulationSummary = buildSimulationSummary(simulationData);
+  const clearSimulation = () => {
+    setSimulationData(null);
+    setSimulationResetKey((key) => key + 1);
+  };
 
   // Compute adjusted collateral positions for display
   const adjustedCollaterals: CollateralPosition[] = mainSnapshot.collaterals.map((col) => {
@@ -431,6 +467,22 @@ export function Dashboard() {
       )}
 
       {/* KPI Cards */}
+      {activeSimulationSummary && (
+        <div className="rounded-xl border border-cro-cyan/40 bg-cro-cyan/10 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <div className="text-xs uppercase tracking-wide text-cro-cyan font-semibold">Active Simulation</div>
+            <div className="mt-1 text-sm text-cro-text">{activeSimulationSummary}</div>
+          </div>
+          <button
+            type="button"
+            onClick={clearSimulation}
+            className="self-start sm:self-auto rounded-lg border border-cro-cyan/40 px-3 py-1.5 text-sm text-cro-cyan hover:bg-cro-cyan/10 transition-colors"
+          >
+            Clear simulation
+          </button>
+        </div>
+      )}
+
       <KPICards
         healthFactor={displayHF}
         liquidationPrice={displayLiqPrice}
@@ -457,6 +509,7 @@ export function Dashboard() {
       {/* Simulator + Repay with Collateral + Liquidation Scenario + Target Helper */}
       <div className="space-y-6">
         <ScenarioSimulator
+          key={`scenario-${simulationResetKey}`}
           snapshot={mainSnapshot}
           prices={activePortfolio.prices}
           onSimulationResult={setSimulationData}
@@ -465,6 +518,7 @@ export function Dashboard() {
           showRepayWithCollateral={false}
         />
         <RepayWithCollateralBox
+          key={`repay-${simulationResetKey}`}
           snapshot={mainSnapshot}
           prices={activePortfolio.prices}
           onSimulationResult={setSimulationData}

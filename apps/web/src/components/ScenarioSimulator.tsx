@@ -38,6 +38,13 @@ function formatNumber(n: number, decimals = 2): string {
   });
 }
 
+function formatTokenAmount(n: number): string {
+  const abs = Math.abs(n);
+  if (abs >= 1000) return formatNumber(n, 2);
+  if (abs >= 1) return formatNumber(n, 4);
+  return formatNumber(n, 6);
+}
+
 export function ScenarioSimulator({
   snapshot,
   prices,
@@ -87,8 +94,8 @@ export function ScenarioSimulator({
       })
     : null;
   const repayWithCollateralSoldAmount = repayWithCollateralPlan?.collateralSoldAmount || 0;
-  const repayWithCollateralQuoteRate = repayWithCollateralPlan?.quoteCollateralPerBorrowUnit || 0;
-  const repayWithCollateralWorstCaseRate = repayWithCollateralPlan?.worstCase.effectiveCollateralPerBorrowUnit || 0;
+  const repayWithCollateralQuoteRate = repayWithCollateralPlan?.quoteCollateralPerBorrowUnit || repayWithCollateralBaseRate;
+  const repayWithCollateralWorstCaseRate = repayWithCollateralPlan?.worstCase.effectiveCollateralPerBorrowUnit || repayWithCollateralBaseRate * (1 + repayWithCollateralSlippage / 100);
   const repayWithCollateralWorstCaseSoldAmount = repayWithCollateralPlan?.worstCase.collateralSoldAmount || 0;
   const repayWithCollateralWorstCaseRemaining = repayWithCollateralPlan?.worstCase.remainingCollateralAmount || currentCollateralAmount;
   const remainingCollateralAfterRepayWithCollateral = repayWithCollateralPlan?.remainingCollateralAmount || currentCollateralAmount;
@@ -305,10 +312,10 @@ export function ScenarioSimulator({
             </div>
             <div className="text-right text-xs text-cro-muted">
               <div>
-                Quote: <span className="font-mono text-cro-text">{formatNumber(repayWithCollateralQuoteRate, 8)} {assetSymbol}/{borrowSymbol}</span>
+                Quote: <span className="font-mono text-cro-text">{formatNumber(repayWithCollateralQuoteRate, 4)} {assetSymbol}/{borrowSymbol}</span>
               </div>
               <div>
-                Worst case @ {formatNumber(repayWithCollateralSlippage, 2)}%: <span className="font-mono text-cro-warning">{formatNumber(repayWithCollateralWorstCaseRate, 8)} {assetSymbol}/{borrowSymbol}</span>
+                Worst case @ {formatNumber(repayWithCollateralSlippage, 2)}%: <span className="font-mono text-cro-warning">{formatNumber(repayWithCollateralWorstCaseRate, 4)} {assetSymbol}/{borrowSymbol}</span>
               </div>
             </div>
           </div>
@@ -365,19 +372,19 @@ export function ScenarioSimulator({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
             <div className="rounded-lg border border-cro-border bg-cro-card px-3 py-2">
               <div className="text-cro-muted text-xs uppercase tracking-wide">Quoted {assetSymbol} Sold</div>
-              <div className="mt-1 font-mono text-cro-text">{formatNumber(repayWithCollateralSoldAmount, 4)} {assetSymbol}</div>
+              <div className="mt-1 font-mono text-cro-text">{formatTokenAmount(repayWithCollateralSoldAmount)} {assetSymbol}</div>
             </div>
             <div className="rounded-lg border border-cro-border bg-cro-card px-3 py-2">
               <div className="text-cro-muted text-xs uppercase tracking-wide">Quoted {assetSymbol} Left</div>
-              <div className="mt-1 font-mono text-cro-text">{formatNumber(remainingCollateralAfterRepayWithCollateral, 4)} {assetSymbol}</div>
+              <div className="mt-1 font-mono text-cro-text">{formatTokenAmount(remainingCollateralAfterRepayWithCollateral)} {assetSymbol}</div>
             </div>
             <div className="rounded-lg border border-cro-warning/40 bg-cro-warning/5 px-3 py-2">
               <div className="text-cro-muted text-xs uppercase tracking-wide">Worst-case {assetSymbol} Sold</div>
-              <div className="mt-1 font-mono text-cro-warning">{formatNumber(repayWithCollateralWorstCaseSoldAmount, 4)} {assetSymbol}</div>
+              <div className="mt-1 font-mono text-cro-warning">{formatTokenAmount(repayWithCollateralWorstCaseSoldAmount)} {assetSymbol}</div>
             </div>
             <div className="rounded-lg border border-cro-warning/40 bg-cro-warning/5 px-3 py-2">
               <div className="text-cro-muted text-xs uppercase tracking-wide">Worst-case {assetSymbol} Left</div>
-              <div className="mt-1 font-mono text-cro-warning">{formatNumber(repayWithCollateralWorstCaseRemaining, 4)} {assetSymbol}</div>
+              <div className="mt-1 font-mono text-cro-warning">{formatTokenAmount(repayWithCollateralWorstCaseRemaining)} {assetSymbol}</div>
             </div>
           </div>
         </div>

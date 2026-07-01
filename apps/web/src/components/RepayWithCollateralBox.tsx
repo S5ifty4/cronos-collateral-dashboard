@@ -22,6 +22,13 @@ function formatNumber(n: number, decimals = 2): string {
   });
 }
 
+function formatTokenAmount(n: number): string {
+  const abs = Math.abs(n);
+  if (abs >= 1000) return formatNumber(n, 2);
+  if (abs >= 1) return formatNumber(n, 4);
+  return formatNumber(n, 6);
+}
+
 export function RepayWithCollateralBox({
   snapshot,
   prices,
@@ -56,7 +63,7 @@ export function RepayWithCollateralBox({
 
   const quotedSold = plan?.collateralSoldAmount || 0;
   const quotedLeft = plan?.remainingCollateralAmount || currentCollateralAmount;
-  const worstCaseRate = plan?.worstCase.effectiveCollateralPerBorrowUnit || 0;
+  const worstCaseRate = plan?.worstCase.effectiveCollateralPerBorrowUnit || quoteRate * (1 + slippagePct / 100);
   const worstCaseSold = plan?.worstCase.collateralSoldAmount || 0;
   const worstCaseLeft = plan?.worstCase.remainingCollateralAmount || currentCollateralAmount;
 
@@ -104,10 +111,10 @@ export function RepayWithCollateralBox({
           <div />
           <div>
             <div>
-              Quote: <span className="font-mono text-cro-text">{formatNumber(quoteRate, 8)} {assetSymbol}/{borrowSymbol}</span>
+              Quote: <span className="font-mono text-cro-text">{formatNumber(quoteRate, 4)} {assetSymbol}/{borrowSymbol}</span>
             </div>
             <div>
-              Worst case @ {formatNumber(slippagePct, 2)}%: <span className="font-mono text-cro-warning">{formatNumber(worstCaseRate, 8)} {assetSymbol}/{borrowSymbol}</span>
+              Worst case @ {formatNumber(slippagePct, 2)}%: <span className="font-mono text-cro-warning">{formatNumber(worstCaseRate, 4)} {assetSymbol}/{borrowSymbol}</span>
             </div>
           </div>
         </div>
@@ -164,19 +171,19 @@ export function RepayWithCollateralBox({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
           <div className="rounded-lg border border-cro-border bg-cro-card px-3 py-2">
             <div className="text-cro-muted text-xs uppercase tracking-wide">Quoted {assetSymbol} Sold</div>
-            <div className="mt-1 font-mono text-cro-text">{formatNumber(quotedSold, 4)} {assetSymbol}</div>
+            <div className="mt-1 font-mono text-cro-text">{formatTokenAmount(quotedSold)} {assetSymbol}</div>
           </div>
           <div className="rounded-lg border border-cro-border bg-cro-card px-3 py-2">
             <div className="text-cro-muted text-xs uppercase tracking-wide">Quoted {assetSymbol} Left</div>
-            <div className="mt-1 font-mono text-cro-text">{formatNumber(quotedLeft, 4)} {assetSymbol}</div>
+            <div className="mt-1 font-mono text-cro-text">{formatTokenAmount(quotedLeft)} {assetSymbol}</div>
           </div>
           <div className="rounded-lg border border-cro-warning/40 bg-cro-warning/5 px-3 py-2">
             <div className="text-cro-muted text-xs uppercase tracking-wide">Worst-case {assetSymbol} Sold</div>
-            <div className="mt-1 font-mono text-cro-warning">{formatNumber(worstCaseSold, 4)} {assetSymbol}</div>
+            <div className="mt-1 font-mono text-cro-warning">{formatTokenAmount(worstCaseSold)} {assetSymbol}</div>
           </div>
           <div className="rounded-lg border border-cro-warning/40 bg-cro-warning/5 px-3 py-2">
             <div className="text-cro-muted text-xs uppercase tracking-wide">Worst-case {assetSymbol} Left</div>
-            <div className="mt-1 font-mono text-cro-warning">{formatNumber(worstCaseLeft, 4)} {assetSymbol}</div>
+            <div className="mt-1 font-mono text-cro-warning">{formatTokenAmount(worstCaseLeft)} {assetSymbol}</div>
           </div>
         </div>
       </div>

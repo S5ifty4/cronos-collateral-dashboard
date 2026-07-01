@@ -56,27 +56,27 @@ export function TargetHFHelper({
     setResult(calculated);
   }, [targetPercent, currentPercent, targetHF, snapshot, prices]);
 
-  // Preset targets as borrow limit % (lower = safer)
+  // Preset targets as Lava Bar / Health Factor % (lower = safer)
   const presets = [
-    { label: '25%', value: 25 },   // HF 4.0 - safest
-    { label: '33%', value: 33 },   // HF 3.0
-    { label: '50%', value: 50 },   // HF 2.0
-    { label: '75%', value: 75 },   // HF 1.33 - riskiest
+    { label: '25% Very Safe', value: 25 },
+    { label: '33% Safe', value: 33 },
+    { label: '50% Balanced', value: 50 },
+    { label: '75% Aggressive', value: 75 },
   ];
 
   return (
     <div className="bg-cro-card rounded-xl border border-cro-border p-4">
       <div className="mb-4 flex items-center gap-2">
-        <h3 className="font-semibold text-cro-text">Target HF</h3>
+        <h3 className="font-semibold text-cro-text">Target Health Factor</h3>
         <InfoTooltip label="About target health factor">
-          Choose a safer borrow-limit-used percentage and estimate either how much debt to repay or how much collateral to add. Lower percentages map to higher health factors.
+          Tectonic uses the Lava Bar / Health Factor to show how close an account is to liquidation. Lower is safer; 100% is liquidatable.
         </InfoTooltip>
       </div>
 
       <div className="mb-4">
         <div className="flex justify-between mb-2">
           <label className="text-sm font-medium text-cro-text">
-            Target HF
+            Target Lava Bar
           </label>
           <span className="text-sm font-mono text-cro-cyan font-bold">
             {formatNumber(targetPercent, 0)}%
@@ -91,7 +91,7 @@ export function TargetHFHelper({
           onChange={(e) => setTargetPercent(Number(e.target.value))}
           className="w-full h-2 bg-cro-border rounded-lg appearance-none cursor-pointer"
         />
-        <div className="flex justify-center gap-2 mt-2">
+        <div className="flex flex-wrap justify-center gap-2 mt-2">
           {presets.map((preset) => (
             <button
               key={preset.value}
@@ -110,7 +110,7 @@ export function TargetHFHelper({
 
       {targetPercent >= currentPercent ? (
         <div className="p-3 bg-cro-success/10 border border-cro-success/30 rounded-lg text-sm text-cro-success">
-          Your current borrow-limit used (<span className="font-mono">{formatNumber(currentPercent, 1)}%</span>) is already at or below target.
+          Your current Lava Bar / Health Factor (<span className="font-mono">{formatNumber(currentPercent, 1)}%</span>) is already at or below target.
         </div>
       ) : result ? (
         <div className="space-y-3">

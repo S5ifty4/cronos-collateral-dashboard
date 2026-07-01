@@ -10,11 +10,10 @@ interface KPICardsProps {
 }
 
 /**
- * Calculate Borrow Limit Used % (inverse of Health Factor)
- * This matches Tectonic's display - higher % = more risk
- * At 100% you get liquidated
+ * Calculate Tectonic-style Health Factor / Lava Bar %.
+ * Higher = more risk; 100% means liquidatable.
  */
-function calculateBorrowLimitUsed(healthFactor: number | null): number {
+function calculateLavaBar(healthFactor: number | null): number {
   if (healthFactor === null || !isFinite(healthFactor) || healthFactor <= 0) return 0;
   return Math.min(100, (1 / healthFactor) * 100);
 }
@@ -40,21 +39,25 @@ function formatUsd(n: number): string {
   return `$${formatNumber(n)}`;
 }
 
-/**
- * Color based on Borrow Limit Used % (higher = more danger)
- * <50% = safe (green), 50-67% = caution (yellow), 67-90% = warning (orange), >90% = danger (red)
- */
-function getBorrowLimitColor(borrowLimitUsed: number): string {
-  if (borrowLimitUsed < 50) return 'text-cro-success';
-  if (borrowLimitUsed < 67) return 'text-cro-warning';
-  if (borrowLimitUsed < 90) return 'text-orange-500';
+function getRiskStatus(lavaBar: number): string {
+  if (lavaBar < 50) return 'Healthy';
+  if (lavaBar < 75) return 'Moderate';
+  if (lavaBar < 90) return 'High Risk';
+  if (lavaBar < 100) return 'Near Limit';
+  return 'Liquidatable';
+}
+
+function getLavaBarColor(lavaBar: number): string {
+  if (lavaBar < 50) return 'text-cro-success';
+  if (lavaBar < 75) return 'text-cro-warning';
+  if (lavaBar < 90) return 'text-orange-500';
   return 'text-cro-danger';
 }
 
-function getBorrowLimitBorderColor(borrowLimitUsed: number): string {
-  if (borrowLimitUsed < 50) return 'border-cro-success/50';
-  if (borrowLimitUsed < 67) return 'border-cro-warning/50';
-  if (borrowLimitUsed < 90) return 'border-orange-500/50';
+function getLavaBarBorderColor(lavaBar: number): string {
+  if (lavaBar < 50) return 'border-cro-success/50';
+  if (lavaBar < 75) return 'border-cro-warning/50';
+  if (lavaBar < 90) return 'border-orange-500/50';
   return 'border-cro-danger/50';
 }
 
@@ -66,7 +69,7 @@ export function KPICards({
   totalCollateralUsd,
   collateralSymbol = 'CRO',
 }: KPICardsProps) {
-  const borrowLimitUsed = calculateBorrowLimitUsed(healthFactor);
+  const lavaBar = calculateLavaBar(healthFactor);
   const ltv = calculateLTV(totalBorrowUsd, totalCollateralUsd);
   const priceBuffer =
     currentPrice > 0
@@ -75,18 +78,21 @@ export function KPICards({
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
-      {/* Health Factor */}
+      {/* Health Factor / Lava Bar */}
       <div
-        className={`p-3 sm:p-4 rounded-xl border-2 bg-cro-card ${getBorrowLimitBorderColor(borrowLimitUsed)}`}
+        className={`p-3 sm:p-4 rounded-xl border-2 bg-cro-card ${getLavaBarBorderColor(lavaBar)}`}
       >
-        <div className="text-xs sm:text-sm font-medium text-cro-muted mb-1">
-          Health Factor
+        <div className="flex items-center justify-between gap-2 text-xs sm:text-sm font-medium text-cro-muted mb-1">
+          <span>Health Factor</span>
+          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${getLavaBarColor(lavaBar)} bg-cro-dark/60`}>
+            {getRiskStatus(lavaBar)}
+          </span>
         </div>
-        <div className={`text-xl sm:text-3xl font-bold font-mono ${getBorrowLimitColor(borrowLimitUsed)}`}>
-          {formatNumber(borrowLimitUsed, 1)}%
+        <div className={`text-xl sm:text-3xl font-bold font-mono ${getLavaBarColor(lavaBar)}`}>
+          {formatNumber(lavaBar, 1)}%
         </div>
         <div className="text-xs text-cro-muted font-mono mt-1 hidden sm:block">
-          LTV: {formatNumber(ltv, 2)}%
+          Lava Bar · Current LTV {formatNumber(ltv, 2)}%
         </div>
       </div>
 

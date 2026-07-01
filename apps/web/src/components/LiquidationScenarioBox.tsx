@@ -25,6 +25,13 @@ function formatHF(n: number): string {
   return n.toFixed(2);
 }
 
+function formatTokenAmount(n: number): string {
+  const abs = Math.abs(n);
+  if (abs >= 1000) return formatNumber(n, 2);
+  if (abs >= 1) return formatNumber(n, 4);
+  return formatNumber(n, 6);
+}
+
 function OutcomeCard({
   title,
   subtitle,
@@ -57,11 +64,11 @@ function OutcomeCard({
         </div>
         <div>
           <div className="text-cro-muted text-xs uppercase tracking-wide">{assetSymbol} Seized</div>
-          <div className="font-mono text-cro-danger">{formatNumber(outcome.collateralSeizedAmount, 4)}</div>
+          <div className="font-mono text-cro-danger">{formatTokenAmount(outcome.collateralSeizedAmount)}</div>
         </div>
         <div>
           <div className="text-cro-muted text-xs uppercase tracking-wide">Penalty Cost</div>
-          <div className="font-mono text-cro-warning">{formatNumber(outcome.penaltyCollateralAmount, 4)} {assetSymbol}</div>
+          <div className="font-mono text-cro-warning">{formatTokenAmount(outcome.penaltyCollateralAmount)} {assetSymbol}</div>
           <div className="text-xs text-cro-muted">${formatNumber(outcome.penaltyUsd)}</div>
         </div>
         <div>
@@ -71,7 +78,7 @@ function OutcomeCard({
       </div>
 
       <div className="mt-2 text-xs text-cro-muted">
-        {assetSymbol} left: <span className="font-mono text-cro-text">{formatNumber(outcome.remainingCollateralAmount, 4)}</span>
+        {assetSymbol} left: <span className="font-mono text-cro-text">{formatTokenAmount(outcome.remainingCollateralAmount)}</span>
       </div>
     </div>
   );
@@ -204,7 +211,7 @@ export function LiquidationScenarioBox({
         <div className={`rounded-lg border px-3 py-2 text-sm ${scenario.atRisk ? 'border-cro-danger/50 bg-cro-danger/5' : 'border-cro-border bg-cro-dark/40'}`}>
           {scenario.atRisk ? (
             <span className="text-cro-danger font-medium">
-              Liquidatable at this price. Showing the max close-factor estimate because it is the conservative case and matched observed Tectonic behavior.
+              At this price, liquidation could repay about ${formatNumber(scenario.maxCloseFactor.debtRepaidUsd)} and seize about {formatTokenAmount(scenario.maxCloseFactor.collateralSeizedAmount)} {assetSymbol}.
             </span>
           ) : (
             <span className="text-cro-muted">
@@ -215,8 +222,8 @@ export function LiquidationScenarioBox({
 
         <div className="grid grid-cols-1 gap-3">
           <OutcomeCard
-            title="Max Close-Factor Estimate"
-            subtitle="Repays the full selected-debt close factor, capped by available collateral. Use this as the planning estimate for a first liquidation event."
+            title="Estimated Liquidation Event"
+            subtitle="Uses max Close Factor for the selected debt, capped by available collateral."
             outcome={scenario.maxCloseFactor}
             assetSymbol={assetSymbol}
             emphasize
