@@ -114,12 +114,12 @@ export default function Home() {
                 Terms of Use
               </a>
               <a
-                href="https://tectonic.gitbook.io/docs/protocol/liquidation-mechanism"
+                href="https://tectonic.gitbook.io/docs"
                 target="_blank"
                 rel="noreferrer"
                 className="text-cro-cyan hover:underline"
               >
-                Tectonic Protocol Docs
+                Tectonic Whitepaper
               </a>
             </div>
           </div>
