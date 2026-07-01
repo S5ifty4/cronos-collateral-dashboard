@@ -81,15 +81,22 @@ export function PositionTables({
         <div className="px-4 py-3 bg-cro-card-light border-b border-cro-border">
           <h3 className="font-semibold text-cro-text">Collateral</h3>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="overflow-hidden">
+          <table className="w-full table-fixed text-xs xl:text-sm">
+            <colgroup>
+              <col className="w-[22%]" />
+              <col className="w-[25%]" />
+              <col className="w-[21%]" />
+              <col className="w-[18%]" />
+              <col className="w-[14%]" />
+            </colgroup>
             <thead>
               <tr className="text-left text-xs text-cro-muted uppercase tracking-wider whitespace-nowrap">
-                <th className="px-4 py-3">Asset</th>
-                <th className="px-4 py-3 text-right">Amount</th>
-                <th className="px-4 py-3 text-right">Value</th>
-                <th className="px-4 py-3 text-right">Liq.&nbsp;Threshold</th>
-                <th className="px-4 py-3 text-right">Liq.&nbsp;Price</th>
+                <th className="px-2 sm:px-3 py-3">Asset</th>
+                <th className="px-2 sm:px-3 py-3 text-right">Amount</th>
+                <th className="px-2 sm:px-3 py-3 text-right">Value</th>
+                <th className="px-2 sm:px-3 py-3 text-right">Liq.&nbsp;Thresh.</th>
+                <th className="px-2 sm:px-3 py-3 text-right">Liq.&nbsp;Price</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-cro-border">
@@ -102,28 +109,28 @@ export function PositionTables({
 
                 return (
                   <tr key={col.asset.symbol} className={`hover:bg-cro-card-light transition-colors ${hasChange ? (isIncrease ? 'bg-cro-success/5' : 'bg-cro-danger/5') : ''}`}>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
+                    <td className="px-2 sm:px-3 py-3">
+                      <div className="flex min-w-0 items-center gap-2">
                         {TOKEN_LOGOS[col.asset.symbol] ? (
                           <img
                             src={TOKEN_LOGOS[col.asset.symbol]}
                             alt={col.asset.symbol}
-                            className="w-8 h-8 rounded-full"
+                            className="w-6 h-6 sm:w-7 sm:h-7 rounded-full flex-shrink-0"
                           />
                         ) : (
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cro-cyan to-cro-navy flex items-center justify-center text-white text-xs font-bold">
+                          <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-to-br from-cro-cyan to-cro-navy flex flex-shrink-0 items-center justify-center text-white text-xs font-bold">
                             {col.asset.symbol.slice(0, 2)}
                           </div>
                         )}
-                        <span className="font-medium text-cro-text">{col.asset.symbol}</span>
+                        <span className="font-medium text-cro-text truncate">{col.asset.symbol}</span>
                         {hasChange && (
-                          <span className={`text-xs px-1.5 py-0.5 rounded ${isIncrease ? 'bg-cro-success/20 text-cro-success' : 'bg-cro-danger/20 text-cro-danger'}`}>
+                          <span className={`hidden sm:inline text-[10px] px-1.5 py-0.5 rounded ${isIncrease ? 'bg-cro-success/20 text-cro-success' : 'bg-cro-danger/20 text-cro-danger'}`}>
                             Simulated
                           </span>
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-right font-mono text-cro-text">
+                    <td className="px-2 sm:px-3 py-3 text-right font-mono tabular-nums text-cro-text whitespace-nowrap">
                       <div>{formatTokenAmount(col.amount)}</div>
                       {hasChange && (
                         <div className={`text-xs ${isIncrease ? 'text-cro-success' : 'text-cro-danger'}`}>
@@ -131,7 +138,7 @@ export function PositionTables({
                         </div>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-right font-mono text-cro-text">
+                    <td className="px-2 sm:px-3 py-3 text-right font-mono tabular-nums text-cro-text whitespace-nowrap">
                       <div>{formatUsd(col.valueUsd)}</div>
                       {hasChange && (
                         <div className={`text-xs ${isIncrease ? 'text-cro-success' : 'text-cro-danger'}`}>
@@ -139,10 +146,10 @@ export function PositionTables({
                         </div>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-right font-mono text-cro-muted">
+                    <td className="px-2 sm:px-3 py-3 text-right font-mono tabular-nums text-cro-muted whitespace-nowrap">
                       {(col.liquidationThreshold * 100).toFixed(0)}%
                     </td>
-                    <td className="px-4 py-3 text-right font-mono text-sm text-cro-cyan whitespace-nowrap">
+                    <td className="px-2 sm:px-3 py-3 text-right font-mono tabular-nums text-cro-cyan whitespace-nowrap">
                       {liquidationPrices[col.asset.symbol] !== undefined && liquidationPrices[col.asset.symbol] !== null
                         ? `$${formatNumber(liquidationPrices[col.asset.symbol], 3)}`
                         : '—'}
@@ -167,13 +174,18 @@ export function PositionTables({
         <div className="px-4 py-3 bg-cro-card-light border-b border-cro-border">
           <h3 className="font-semibold text-cro-text">Borrowed</h3>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="overflow-hidden">
+          <table className="w-full table-fixed text-xs xl:text-sm">
+            <colgroup>
+              <col className="w-[35%]" />
+              <col className="w-[33%]" />
+              <col className="w-[32%]" />
+            </colgroup>
             <thead>
               <tr className="text-left text-xs text-cro-muted uppercase tracking-wider">
-                <th className="px-4 py-3">Asset</th>
-                <th className="px-4 py-3 text-right">Amount</th>
-                <th className="px-4 py-3 text-right">Value</th>
+                <th className="px-2 sm:px-3 py-3">Asset</th>
+                <th className="px-2 sm:px-3 py-3 text-right">Amount</th>
+                <th className="px-2 sm:px-3 py-3 text-right">Value</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-cro-border">
@@ -186,28 +198,28 @@ export function PositionTables({
 
                 return (
                   <tr key={bor.asset.symbol} className={`hover:bg-cro-card-light transition-colors ${hasChange ? (isIncrease ? 'bg-cro-warning/5' : 'bg-cro-success/5') : ''}`}>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
+                    <td className="px-2 sm:px-3 py-3">
+                      <div className="flex min-w-0 items-center gap-2">
                         {TOKEN_LOGOS[bor.asset.symbol] ? (
                           <img
                             src={TOKEN_LOGOS[bor.asset.symbol]}
                             alt={bor.asset.symbol}
-                            className="w-8 h-8 rounded-full"
+                            className="w-6 h-6 sm:w-7 sm:h-7 rounded-full flex-shrink-0"
                           />
                         ) : (
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cro-warning to-orange-600 flex items-center justify-center text-white text-xs font-bold">
+                          <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-to-br from-cro-warning to-orange-600 flex flex-shrink-0 items-center justify-center text-white text-xs font-bold">
                             {bor.asset.symbol.slice(0, 2)}
                           </div>
                         )}
-                        <span className="font-medium text-cro-text">{bor.asset.symbol}</span>
+                        <span className="font-medium text-cro-text truncate">{bor.asset.symbol}</span>
                         {hasChange && (
-                          <span className={`text-xs px-1.5 py-0.5 rounded ${isIncrease ? 'bg-cro-warning/20 text-cro-warning' : 'bg-cro-success/20 text-cro-success'}`}>
+                          <span className={`hidden sm:inline text-[10px] px-1.5 py-0.5 rounded ${isIncrease ? 'bg-cro-warning/20 text-cro-warning' : 'bg-cro-success/20 text-cro-success'}`}>
                             Simulated
                           </span>
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-right font-mono text-cro-text">
+                    <td className="px-2 sm:px-3 py-3 text-right font-mono tabular-nums text-cro-text whitespace-nowrap">
                       <div>{formatTokenAmount(bor.amount)}</div>
                       {hasChange && (
                         <div className={`text-xs ${isIncrease ? 'text-cro-warning' : 'text-cro-success'}`}>
@@ -215,7 +227,7 @@ export function PositionTables({
                         </div>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-right font-mono text-cro-text">
+                    <td className="px-2 sm:px-3 py-3 text-right font-mono tabular-nums text-cro-text whitespace-nowrap">
                       <div>{formatUsd(bor.valueUsd)}</div>
                       {hasChange && (
                         <div className={`text-xs ${isIncrease ? 'text-cro-warning' : 'text-cro-success'}`}>
