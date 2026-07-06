@@ -24,7 +24,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-cro-bg cro-glow">
       {/* Header */}
-      <header className="border-b border-cro-border bg-cro-dark/80 backdrop-blur-md sticky top-0 z-50">
+      <header className="border-b border-cro-border bg-cro-bg/80 backdrop-blur-xl sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-2 sm:gap-3">
@@ -33,34 +33,37 @@ export default function Home() {
                 <svg viewBox="0 0 32 32" className="w-8 h-8 sm:w-10 sm:h-10" fill="none">
                   <defs>
                     <linearGradient id="cro-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#002D74" />
-                      <stop offset="100%" stopColor="#001440" />
+                      <stop offset="0%" stopColor="#4CDBFF" />
+                      <stop offset="55%" stopColor="#66DEFF" />
+                      <stop offset="100%" stopColor="#1CF1D8" />
                     </linearGradient>
                   </defs>
                   {/* Outer hexagon */}
                   <path
                     d="M16 1L3 8.5v15L16 31l13-7.5v-15L16 1z"
-                    fill="url(#cro-gradient)"
+                    fill="#0C0C10"
+                    stroke="url(#cro-gradient)"
+                    strokeWidth="1.5"
                   />
                   {/* Inner hexagon outline */}
                   <path
                     d="M16 6L7 11v10l9 5 9-5V11L16 6z"
                     fill="none"
-                    stroke="#00D4FF"
+                    stroke="#4CDBFF"
                     strokeWidth="1.5"
                   />
                   {/* Center hexagon */}
                   <path
                     d="M16 10l-5 2.9v5.8l5 2.9 5-2.9v-5.8L16 10z"
-                    fill="#002D74"
-                    stroke="#00D4FF"
+                    fill="url(#cro-gradient)"
+                    stroke="#C7F2FF"
                     strokeWidth="0.75"
                   />
                 </svg>
               </div>
               <div>
-                <h1 className="font-bold text-cro-text text-sm sm:text-base">Collateral Dashboard</h1>
-                <p className="text-xs text-cro-muted hidden sm:block">Cronos / Tectonic</p>
+                <h1 className="font-semibold tracking-tight text-cro-text text-sm sm:text-base">Collateral Dashboard</h1>
+                <p className="text-xs text-cro-muted hidden sm:block">Cronos / Tectonic risk simulator</p>
               </div>
             </div>
             <ConnectWallet />
