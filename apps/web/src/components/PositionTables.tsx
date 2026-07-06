@@ -211,7 +211,7 @@ export function PositionTables({
                   </div>
                 </div>
 
-                <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                <div className="mt-4 space-y-3 text-sm">
                   <div className="rounded-lg border border-cro-border bg-cro-dark/50 p-3">
                     <div className="text-[10px] uppercase tracking-wider text-cro-muted">Value</div>
                     <div className="mt-1 font-mono tabular-nums text-cro-text">{formatUsd(col.valueUsd)}</div>
@@ -221,18 +221,20 @@ export function PositionTables({
                       </div>
                     )}
                   </div>
-                  <div className="rounded-lg border border-cro-border bg-cro-dark/50 p-3">
-                    <div className="text-[10px] uppercase tracking-wider text-cro-muted">Liq. Thresh.</div>
-                    <div className="mt-1 font-mono tabular-nums text-cro-text">
-                      {(col.liquidationThreshold * 100).toFixed(0)}%
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-lg border border-cro-border bg-cro-dark/50 p-3">
+                      <div className="text-[10px] uppercase tracking-wider text-cro-muted">Liq. Thresh.</div>
+                      <div className="mt-1 font-mono tabular-nums text-cro-text">
+                        {(col.liquidationThreshold * 100).toFixed(0)}%
+                      </div>
                     </div>
-                  </div>
-                  <div className="col-span-2 rounded-lg border border-cro-cyan/30 bg-cro-cyan/5 p-3">
-                    <div className="text-[10px] uppercase tracking-wider text-cro-muted">Liq. Price</div>
-                    <div className="mt-1 font-mono tabular-nums text-cro-cyan">
-                      {liquidationPrices[col.asset.symbol] !== undefined && liquidationPrices[col.asset.symbol] !== null
-                        ? `$${formatNumber(liquidationPrices[col.asset.symbol], 3)}`
-                        : '—'}
+                    <div className="rounded-lg border border-cro-cyan/30 bg-cro-cyan/5 p-3">
+                      <div className="text-[10px] uppercase tracking-wider text-cro-muted">Liq. Price</div>
+                      <div className="mt-1 font-mono tabular-nums text-cro-cyan">
+                        {liquidationPrices[col.asset.symbol] !== undefined && liquidationPrices[col.asset.symbol] !== null
+                          ? `$${formatNumber(liquidationPrices[col.asset.symbol], 3)}`
+                          : '—'}
+                      </div>
                     </div>
                   </div>
                 </div>
