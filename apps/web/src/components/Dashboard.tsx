@@ -15,6 +15,7 @@ import { RepayWithCollateralBox } from './RepayWithCollateralBox';
 import { LiquidationScenarioBox } from './LiquidationScenarioBox';
 import { LiquidationHistoryBox } from './LiquidationHistoryBox';
 import { TargetHFHelper } from './TargetHFHelper';
+import { FulcromPositions } from './FulcromPositions';
 
 // Fallback prices for demo mode (used if API fails)
 const FALLBACK_PRICES: Record<string, number> = {
@@ -147,6 +148,7 @@ export function Dashboard() {
   const [demoLT, setDemoLT] = useState(75);
   const [demoAsset, setDemoAsset] = useState('CRO');
   const [selectedLoanIndex, setSelectedLoanIndex] = useState(0);
+  const [activeProtocol, setActiveProtocol] = useState<'tectonic' | 'fulcrom'>('tectonic');
 
   // Update LT when asset changes
   const handleAssetChange = (symbol: string) => {
@@ -188,6 +190,38 @@ export function Dashboard() {
   const demoPortfolio = demoMode ? createDemoPortfolio(demoPrices, demoCollateral, demoBorrowed, demoLT, demoAsset) : null;
   const activePortfolio = demoMode ? demoPortfolio : portfolio;
 
+  const ProtocolToggle = () => (
+    <div className="rounded-2xl border border-cro-border bg-cro-card p-2">
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={() => setActiveProtocol('tectonic')}
+          className={`rounded-xl px-3 py-3 text-sm font-semibold transition-all sm:text-base ${
+            activeProtocol === 'tectonic'
+              ? 'bg-cro-cyan text-cro-dark shadow-[0_0_24px_rgba(76,219,255,0.18)]'
+              : 'bg-cro-dark text-cro-muted hover:bg-cro-border hover:text-cro-text'
+          }`}
+        >
+          Tectonic Lending
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveProtocol('fulcrom')}
+          className={`rounded-xl px-3 py-3 text-sm font-semibold transition-all sm:text-base ${
+            activeProtocol === 'fulcrom'
+              ? 'bg-gradient-to-r from-purple-500 to-cro-cyan text-cro-dark shadow-[0_0_24px_rgba(168,85,247,0.20)]'
+              : 'bg-cro-dark text-cro-muted hover:bg-cro-border hover:text-cro-text'
+          }`}
+        >
+          Fulcrom Perps
+        </button>
+      </div>
+      <p className="mt-2 px-1 text-center text-xs text-cro-muted sm:text-left">
+        Switch between Tectonic collateral/borrow health and Fulcrom leveraged position risk without mixing their risk models.
+      </p>
+    </div>
+  );
+
   // Show loading placeholder during SSR to avoid hydration mismatch
   if (!mounted) {
     return (
@@ -197,10 +231,21 @@ export function Dashboard() {
     );
   }
 
+  if (activeProtocol === 'fulcrom') {
+    return (
+      <div className="space-y-6">
+        <ProtocolToggle />
+        <FulcromPositions />
+      </div>
+    );
+  }
+
   if (!isConnected && !demoMode) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <div className="w-24 h-24 mb-6 rounded-full bg-cro-card border border-cro-border flex items-center justify-center">
+      <div className="space-y-6">
+        <ProtocolToggle />
+        <div className="flex flex-col items-center justify-center py-20">
+          <div className="w-24 h-24 mb-6 rounded-full bg-cro-card border border-cro-border flex items-center justify-center">
           <svg
             className="w-12 h-12 text-cro-cyan"
             fill="none"
@@ -234,6 +279,7 @@ export function Dashboard() {
           </p>
         </div>
       </div>
+    </div>
     );
   }
 
@@ -347,6 +393,7 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
+      <ProtocolToggle />
       {/* Positions Bar + CROpium - Only show when connected (not in demo mode) */}
       {!demoMode && loanPairs.length > 0 && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">

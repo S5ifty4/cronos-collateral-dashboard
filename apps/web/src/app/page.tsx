@@ -63,7 +63,7 @@ export default function Home() {
               </div>
               <div>
                 <h1 className="font-semibold tracking-tight text-cro-text text-sm sm:text-base">Collateral Dashboard</h1>
-                <p className="text-xs text-cro-muted hidden sm:block">Cronos / Tectonic risk simulator</p>
+                <p className="text-xs text-cro-muted hidden sm:block">Cronos DeFi risk dashboard</p>
               </div>
             </div>
             <ConnectWallet />
@@ -107,8 +107,8 @@ export default function Home() {
             </div>
             {/* Disclaimer */}
             <p className="text-center text-xs text-cro-muted max-w-2xl leading-relaxed">
-              Crollateral is an independent, community-built tool. Not affiliated with Tectonic Finance or Crypto.com.
-              Prices are approximate and may be delayed — always verify your positions directly on Tectonic before making
+              Crollateral is an independent, community-built tool. Not affiliated with Tectonic Finance, Fulcrom Finance, or Crypto.com.
+              Prices are approximate and may be delayed — always verify your positions directly on the source platform before making
               any decisions. This tool is read-only and never submits transactions or requests wallet signing.
             </p>
             <strong className="text-xs text-cro-muted">Not financial advice. Use at your own risk.</strong>
