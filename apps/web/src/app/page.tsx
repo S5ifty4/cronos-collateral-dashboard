@@ -124,6 +124,14 @@ export default function Home() {
               >
                 Tectonic Whitepaper
               </a>
+              <a
+                href="https://docs.fulcrom.finance/fulcrom-finance"
+                target="_blank"
+                rel="noreferrer"
+                className="text-cro-cyan hover:underline"
+              >
+                Fulcrom Whitepaper
+              </a>
             </div>
           </div>
         </div>

@@ -216,9 +216,6 @@ export function Dashboard() {
           Fulcrom Perps
         </button>
       </div>
-      <p className="mt-2 px-1 text-center text-xs text-cro-muted sm:text-left">
-        Switch between Tectonic collateral/borrow health and Fulcrom leveraged position risk without mixing their risk models.
-      </p>
     </div>
   );
 
@@ -231,21 +228,10 @@ export function Dashboard() {
     );
   }
 
-  if (activeProtocol === 'fulcrom') {
-    return (
-      <div className="space-y-6">
-        <ProtocolToggle />
-        <FulcromPositions />
-      </div>
-    );
-  }
-
   if (!isConnected && !demoMode) {
     return (
-      <div className="space-y-6">
-        <ProtocolToggle />
-        <div className="flex flex-col items-center justify-center py-20">
-          <div className="w-24 h-24 mb-6 rounded-full bg-cro-card border border-cro-border flex items-center justify-center">
+      <div className="flex flex-col items-center justify-center py-20">
+        <div className="w-24 h-24 mb-6 rounded-full bg-cro-card border border-cro-border flex items-center justify-center">
           <svg
             className="w-12 h-12 text-cro-cyan"
             fill="none"
@@ -279,7 +265,15 @@ export function Dashboard() {
           </p>
         </div>
       </div>
-    </div>
+    );
+  }
+
+  if (activeProtocol === 'fulcrom') {
+    return (
+      <div className="space-y-6">
+        <ProtocolToggle />
+        <FulcromPositions />
+      </div>
     );
   }
 
