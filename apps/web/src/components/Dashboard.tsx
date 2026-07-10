@@ -272,7 +272,7 @@ export function Dashboard() {
     return (
       <div className="space-y-6">
         <ProtocolToggle />
-        <FulcromPositions />
+        <FulcromPositions address={address} demoMode={demoMode} />
       </div>
     );
   }

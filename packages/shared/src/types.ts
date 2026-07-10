@@ -183,6 +183,35 @@ export interface LiquidationHistoryResponse {
   note?: string;
 }
 
+export interface FulcromPosition {
+  platform: string;
+  pair: string;
+  side: 'Long' | 'Short';
+  leverage: number;
+  netValueUsd: number;
+  pnlUsd: number;
+  pnlPct: number;
+  sizeUsd: number;
+  collateralUsd: number;
+  netCollateralUsd: number;
+  markPrice: number;
+  entryPrice: number;
+  liquidationPrice: number;
+  openOrders: number;
+  indexSymbol: string;
+  collateralSymbol: string;
+  source: 'live' | 'demo';
+}
+
+export interface FulcromPositionsResponse {
+  address: string;
+  positions: FulcromPosition[];
+  count: number;
+  source: string;
+  timestamp: number;
+  note?: string;
+}
+
 // API request/response types
 export interface PortfolioRequest {
   address: string;

@@ -1,23 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-
-interface FulcromPosition {
-  platform: string;
-  pair: string;
-  side: 'Long' | 'Short';
-  leverage: number;
-  netValueUsd: number;
-  pnlUsd: number;
-  pnlPct: number;
-  sizeUsd: number;
-  collateralUsd: number;
-  netCollateralUsd: number;
-  markPrice: number;
-  entryPrice: number;
-  liquidationPrice: number;
-  openOrders: number;
-}
+import { useQuery } from '@tanstack/react-query';
+import type { FulcromPosition } from '@cronos-dash/shared';
+import { fetchFulcromPositions } from '@/lib/api';
 
 const REFERENCE_POSITION: FulcromPosition = {
   platform: 'Fulcrom Finance',
@@ -34,6 +20,9 @@ const REFERENCE_POSITION: FulcromPosition = {
   entryPrice: 0.05634,
   liquidationPrice: 0.05468,
   openOrders: 0,
+  indexSymbol: 'CRO',
+  collateralSymbol: 'USDC',
+  source: 'demo',
 };
 
 function formatUsd(value: number, decimals = 2): string {
@@ -107,9 +96,46 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
-export function FulcromPositions() {
-  const position = REFERENCE_POSITION;
+export function FulcromPositions({ address, demoMode = false }: { address?: string; demoMode?: boolean }) {
   const [priceMovePct, setPriceMovePct] = useState(0);
+  const [selectedPositionIndex, setSelectedPositionIndex] = useState(0);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['fulcrom-positions', address],
+    queryFn: () => fetchFulcromPositions(address!),
+    enabled: !!address && !demoMode,
+    refetchInterval: 30000,
+  });
+
+  const livePositions = data?.positions || [];
+  const positions = demoMode ? [REFERENCE_POSITION] : livePositions;
+  const position = positions[Math.min(selectedPositionIndex, Math.max(0, positions.length - 1))] || null;
+
+  if (isLoading) {
+    return (
+      <div className="rounded-xl border border-cro-border bg-cro-card p-6 text-center text-cro-muted">
+        Loading Fulcrom positions…
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-xl border border-cro-danger/40 bg-cro-danger/5 p-6 text-center">
+        <div className="font-semibold text-cro-danger">Failed to load Fulcrom positions</div>
+        <div className="mt-1 text-sm text-cro-muted">Try again shortly, or verify directly on Fulcrom.</div>
+      </div>
+    );
+  }
+
+  if (!position) {
+    return (
+      <div className="rounded-xl border border-cro-border bg-cro-card p-6 text-center">
+        <div className="font-semibold text-cro-text">No open Fulcrom positions</div>
+        <div className="mt-1 text-sm text-cro-muted">Open perps positions for this wallet will appear here automatically.</div>
+      </div>
+    );
+  }
+
   const isLong = position.side === 'Long';
   const priceMultiplier = 1 + priceMovePct / 100;
   const simulatedMarkPrice = position.markPrice * priceMultiplier;
@@ -155,6 +181,7 @@ export function FulcromPositions() {
           <div className="rounded-xl border border-cro-border bg-cro-dark/70 px-4 py-3 text-sm">
             <div className="text-cro-muted">Platform</div>
             <div className="mt-1 font-semibold text-cro-text">{position.platform}</div>
+            <div className="mt-1 text-xs text-cro-muted">{position.source === 'live' ? 'Live on-chain' : 'Demo data'}</div>
           </div>
         </div>
 
@@ -176,6 +203,31 @@ export function FulcromPositions() {
           </div>
         </div>
       </div>
+
+      {positions.length > 1 && (
+        <div className="rounded-xl border border-cro-border bg-cro-card p-3">
+          <div className="flex items-center gap-2 overflow-x-auto">
+            <span className="px-2 text-xs text-cro-muted whitespace-nowrap">Fulcrom positions:</span>
+            {positions.map((p, index) => (
+              <button
+                key={`${p.pair}-${p.side}-${index}`}
+                type="button"
+                onClick={() => {
+                  setSelectedPositionIndex(index);
+                  setPriceMovePct(0);
+                }}
+                className={`whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-all ${
+                  index === selectedPositionIndex
+                    ? 'bg-gradient-to-r from-purple-500 to-cro-cyan text-cro-dark'
+                    : 'bg-cro-dark text-cro-muted hover:bg-cro-border hover:text-cro-text'
+                }`}
+              >
+                {p.pair} {p.side} · {formatNumber(p.leverage, 1)}x
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
         <MetricCard label="Net Value" value={formatUsd(simulatedNetValueUsd)} subtext={priceMovePct === 0 ? 'Current equity' : `${formatSignedNumber(pnlDeltaUsd, 2)} simulated`} tone="cyan" />
