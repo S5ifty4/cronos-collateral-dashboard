@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import type { FulcromPosition } from '@cronos-dash/shared';
-import { fetchFulcromPositions } from '@/lib/api';
+import type { FulcromPosition, FulcromTradeHistoryEvent } from '@cronos-dash/shared';
+import { fetchFulcromPositions, fetchFulcromTradeHistory } from '@/lib/api';
 
 const REFERENCE_POSITION: FulcromPosition = {
   platform: 'Fulcrom Finance',
@@ -24,6 +24,42 @@ const REFERENCE_POSITION: FulcromPosition = {
   collateralSymbol: 'USDC',
   source: 'demo',
 };
+
+const REFERENCE_HISTORY: FulcromTradeHistoryEvent[] = [
+  {
+    id: 'demo-increase-cro-long',
+    txHash: '0x0000000000000000000000000000000000000000000000000000000000000f01',
+    blockNumber: 18750120,
+    blockTime: 1784001600,
+    isoTime: '2026-07-11T18:00:00.000Z',
+    action: 'Increase',
+    pair: 'CRO/USD',
+    side: 'Long',
+    sizeDeltaUsd: 2945.95,
+    collateralDeltaUsd: 98.51,
+    priceUsd: 0.05634,
+    feeUsd: 2.95,
+    indexSymbol: 'CRO',
+    collateralSymbol: 'USDC',
+  },
+  {
+    id: 'demo-decrease-cro-long',
+    txHash: '0x0000000000000000000000000000000000000000000000000000000000000f02',
+    blockNumber: 18742884,
+    blockTime: 1783940400,
+    isoTime: '2026-07-11T01:00:00.000Z',
+    action: 'Decrease',
+    pair: 'CRO/USD',
+    side: 'Long',
+    sizeDeltaUsd: 450,
+    collateralDeltaUsd: 12,
+    priceUsd: 0.05721,
+    feeUsd: 0.45,
+    realisedPnlUsd: 6.82,
+    indexSymbol: 'CRO',
+    collateralSymbol: 'USDC',
+  },
+];
 
 function formatUsd(value: number, decimals = 2): string {
   return value.toLocaleString(undefined, {
@@ -50,6 +86,19 @@ function formatPrice(value: number): string {
     minimumFractionDigits: 5,
     maximumFractionDigits: 5,
   })}`;
+}
+
+function formatDate(isoTime: string): string {
+  return new Intl.DateTimeFormat(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(new Date(isoTime));
+}
+
+function explorerTxUrl(txHash: string): string {
+  return `https://cronoscan.com/tx/${txHash}`;
 }
 
 function MetricCard({
@@ -105,9 +154,15 @@ export function FulcromPositions({ address, demoMode = false }: { address?: stri
     enabled: !!address && !demoMode,
     refetchInterval: 30000,
   });
+  const historyQuery = useQuery({
+    queryKey: ['fulcrom-trade-history', address],
+    queryFn: () => fetchFulcromTradeHistory(address!),
+    enabled: false,
+  });
 
   const livePositions = data?.positions || [];
   const positions = demoMode ? [REFERENCE_POSITION] : livePositions;
+  const historyEvents = demoMode ? REFERENCE_HISTORY : historyQuery.data?.events;
   const position = positions[Math.min(selectedPositionIndex, Math.max(0, positions.length - 1))] || null;
 
   if (isLoading) {
@@ -129,9 +184,69 @@ export function FulcromPositions({ address, demoMode = false }: { address?: stri
 
   if (!position) {
     return (
-      <div className="rounded-xl border border-cro-border bg-cro-card p-6 text-center">
-        <div className="font-semibold text-cro-text">No open Fulcrom positions</div>
-        <div className="mt-1 text-sm text-cro-muted">Open perps positions for this wallet will appear here automatically.</div>
+      <div className="space-y-6">
+        <div className="rounded-xl border border-cro-border bg-cro-card p-6 text-center">
+          <div className="font-semibold text-cro-text">No open Fulcrom positions</div>
+          <div className="mt-1 text-sm text-cro-muted">Open perps positions for this wallet will appear here automatically.</div>
+        </div>
+
+        <div className="rounded-xl border border-cro-border bg-cro-card p-4 sm:p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h3 className="font-semibold text-cro-text">Trade History</h3>
+              <div className="mt-1 text-sm text-cro-muted">
+                Recent Fulcrom increases, decreases, and liquidations for this wallet.
+              </div>
+            </div>
+            {!demoMode && (
+              <button
+                type="button"
+                onClick={() => historyQuery.refetch()}
+                disabled={historyQuery.isFetching || !address}
+                className="self-start rounded-lg border border-cro-cyan/40 px-3 py-1.5 text-sm text-cro-cyan hover:bg-cro-cyan/10 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+              >
+                {historyQuery.isFetching ? 'Loading…' : historyQuery.data ? 'Refresh history' : 'Load history'}
+              </button>
+            )}
+          </div>
+
+          {historyQuery.error && !demoMode && (
+            <div className="mt-4 rounded-lg border border-cro-danger/30 bg-cro-danger/5 p-3 text-sm text-cro-danger">
+              Failed to load Fulcrom trade history. Try again shortly, or verify directly on Fulcrom.
+            </div>
+          )}
+
+          {!historyEvents && !historyQuery.error && !demoMode && (
+            <div className="mt-4 rounded-lg border border-cro-border bg-cro-dark/60 p-4 text-sm text-cro-muted">
+              Trade history is loaded on demand to avoid scanning Vault logs on every dashboard refresh.
+            </div>
+          )}
+
+          {historyEvents && historyEvents.length === 0 && (
+            <div className="mt-4 rounded-lg border border-cro-border bg-cro-dark/60 p-4 text-sm text-cro-muted">
+              No recent Fulcrom trade events found for this wallet in the current lookback window.
+            </div>
+          )}
+
+          {historyEvents && historyEvents.length > 0 && (
+            <div className="mt-4 space-y-2">
+              {historyEvents.slice(0, 5).map((event) => (
+                <div key={event.id} className="flex flex-col gap-2 rounded-lg border border-cro-border bg-cro-dark/60 p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <div className="font-medium text-cro-text">{event.action} {event.pair} {event.side}</div>
+                    <div className="font-mono text-xs text-cro-muted">{formatDate(event.isoTime)} · #{event.blockNumber}</div>
+                  </div>
+                  <div className="flex items-center gap-3 sm:text-right">
+                    <div className="font-mono text-cro-text">{formatUsd(event.sizeDeltaUsd ?? event.sizeUsd ?? 0)}</div>
+                    <a href={explorerTxUrl(event.txHash)} target="_blank" rel="noreferrer" className="font-mono text-xs text-cro-cyan hover:underline">
+                      {event.txHash.slice(0, 6)}…{event.txHash.slice(-4)}
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     );
   }
@@ -354,6 +469,108 @@ export function FulcromPositions({ address, demoMode = false }: { address?: stri
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="rounded-xl border border-cro-border bg-cro-card p-4 sm:p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h3 className="font-semibold text-cro-text">Trade History</h3>
+            <div className="mt-1 text-sm text-cro-muted">
+              Recent Fulcrom increases, decreases, and liquidations for this wallet.
+            </div>
+          </div>
+          {!demoMode && (
+            <button
+              type="button"
+              onClick={() => historyQuery.refetch()}
+              disabled={historyQuery.isFetching || !address}
+              className="self-start rounded-lg border border-cro-cyan/40 px-3 py-1.5 text-sm text-cro-cyan hover:bg-cro-cyan/10 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+            >
+              {historyQuery.isFetching ? 'Loading…' : historyQuery.data ? 'Refresh history' : 'Load history'}
+            </button>
+          )}
+        </div>
+
+        {historyQuery.error && !demoMode && (
+          <div className="mt-4 rounded-lg border border-cro-danger/30 bg-cro-danger/5 p-3 text-sm text-cro-danger">
+            Failed to load Fulcrom trade history. Try again shortly, or verify directly on Fulcrom.
+          </div>
+        )}
+
+        {!historyEvents && !historyQuery.error && !demoMode && (
+          <div className="mt-4 rounded-lg border border-cro-border bg-cro-dark/60 p-4 text-sm text-cro-muted">
+            Trade history is loaded on demand to avoid scanning Vault logs on every dashboard refresh.
+          </div>
+        )}
+
+        {historyEvents && historyEvents.length === 0 && (
+          <div className="mt-4 rounded-lg border border-cro-border bg-cro-dark/60 p-4 text-sm text-cro-muted">
+            No recent Fulcrom trade events found for this wallet in the current lookback window.
+          </div>
+        )}
+
+        {historyEvents && historyEvents.length > 0 && (
+          <div className="mt-4 overflow-hidden rounded-xl border border-cro-border">
+            <div className="hidden bg-cro-dark/80 text-xs uppercase tracking-wide text-cro-muted sm:grid sm:grid-cols-[1.1fr_1fr_0.9fr_0.9fr_0.9fr_0.7fr]">
+              <div className="px-3 py-2">Time</div>
+              <div className="px-3 py-2">Action</div>
+              <div className="px-3 py-2 text-right">Size</div>
+              <div className="px-3 py-2 text-right">Collateral</div>
+              <div className="px-3 py-2 text-right">Price</div>
+              <div className="px-3 py-2 text-right">Tx</div>
+            </div>
+            <div className="divide-y divide-cro-border">
+              {historyEvents.map((event) => {
+                const actionTone = event.action === 'Increase'
+                  ? 'text-cro-success bg-cro-success/10 border-cro-success/30'
+                  : event.action === 'Liquidation'
+                    ? 'text-cro-danger bg-cro-danger/10 border-cro-danger/30'
+                    : 'text-cro-warning bg-cro-warning/10 border-cro-warning/30';
+                const size = event.sizeDeltaUsd ?? event.sizeUsd ?? 0;
+                const collateral = event.collateralDeltaUsd ?? event.collateralUsd ?? 0;
+                return (
+                  <div key={event.id} className="grid gap-3 p-3 text-sm sm:grid-cols-[1.1fr_1fr_0.9fr_0.9fr_0.9fr_0.7fr] sm:items-center sm:gap-0">
+                    <div>
+                      <div className="font-medium text-cro-text">{formatDate(event.isoTime)}</div>
+                      <div className="font-mono text-xs text-cro-muted">#{event.blockNumber}</div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${actionTone}`}>{event.action}</span>
+                      <span className="font-medium text-cro-text">{event.pair}</span>
+                      <span className={`text-xs ${event.side === 'Long' ? 'text-cro-success' : 'text-cro-danger'}`}>{event.side}</span>
+                    </div>
+                    <div className="flex justify-between gap-2 sm:block sm:text-right">
+                      <span className="text-cro-muted sm:hidden">Size</span>
+                      <span className="font-mono text-cro-text">{formatUsd(size)}</span>
+                    </div>
+                    <div className="flex justify-between gap-2 sm:block sm:text-right">
+                      <span className="text-cro-muted sm:hidden">Collateral</span>
+                      <span className="font-mono text-cro-text">{formatUsd(collateral)}</span>
+                    </div>
+                    <div className="flex justify-between gap-2 sm:block sm:text-right">
+                      <span className="text-cro-muted sm:hidden">Price</span>
+                      <span className="font-mono text-cro-text">{event.priceUsd ? formatPrice(event.priceUsd) : '—'}</span>
+                    </div>
+                    <div className="text-left sm:text-right">
+                      <a
+                        href={explorerTxUrl(event.txHash)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="font-mono text-xs text-cro-cyan hover:underline"
+                      >
+                        {event.txHash.slice(0, 6)}…{event.txHash.slice(-4)}
+                      </a>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {historyQuery.data?.note && !demoMode && (
+          <p className="mt-3 text-xs text-cro-muted">{historyQuery.data.note}</p>
+        )}
       </div>
     </div>
   );

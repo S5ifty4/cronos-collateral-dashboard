@@ -7,6 +7,7 @@ import { portfolioRoutes } from './routes/portfolio.js';
 import { simulateRoutes } from './routes/simulate.js';
 import { liquidationHistoryRoutes } from './routes/liquidation-history.js';
 import { fulcromPositionsRoutes } from './routes/fulcrom-positions.js';
+import { fulcromTradeHistoryRoutes } from './routes/fulcrom-trade-history.js';
 
 const fastify = Fastify({
   logger: true,
@@ -67,6 +68,7 @@ async function main() {
   await fastify.register(simulateRoutes, { prefix: '/api' });
   await fastify.register(liquidationHistoryRoutes, { prefix: '/api' });
   await fastify.register(fulcromPositionsRoutes, { prefix: '/api' });
+  await fastify.register(fulcromTradeHistoryRoutes, { prefix: '/api' });
 
   // ── Start ─────────────────────────────────────────────────────────────────────
   try {

@@ -6,6 +6,7 @@ import type {
   TargetHFResult,
   LiquidationHistoryResponse,
   FulcromPositionsResponse,
+  FulcromTradeHistoryResponse,
 } from '@cronos-dash/shared';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -67,6 +68,14 @@ export async function fetchFulcromPositions(address: string): Promise<FulcromPos
   const res = await fetch(`${API_BASE}/api/fulcrom-positions?address=${encodeURIComponent(address)}`);
   if (!res.ok) {
     throw new Error('Failed to fetch Fulcrom positions');
+  }
+  return res.json();
+}
+
+export async function fetchFulcromTradeHistory(address: string): Promise<FulcromTradeHistoryResponse> {
+  const res = await fetch(`${API_BASE}/api/fulcrom-trade-history?address=${encodeURIComponent(address)}`);
+  if (!res.ok) {
+    throw new Error('Failed to fetch Fulcrom trade history');
   }
   return res.json();
 }

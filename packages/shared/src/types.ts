@@ -212,6 +212,37 @@ export interface FulcromPositionsResponse {
   note?: string;
 }
 
+export interface FulcromTradeHistoryEvent {
+  id: string;
+  txHash: string;
+  blockNumber: number;
+  blockTime: number;
+  isoTime: string;
+  action: 'Increase' | 'Decrease' | 'Close' | 'Liquidation';
+  pair: string;
+  side: 'Long' | 'Short';
+  sizeDeltaUsd?: number;
+  collateralDeltaUsd?: number;
+  sizeUsd?: number;
+  collateralUsd?: number;
+  priceUsd?: number;
+  feeUsd?: number;
+  realisedPnlUsd?: number;
+  indexSymbol: string;
+  collateralSymbol: string;
+}
+
+export interface FulcromTradeHistoryResponse {
+  address: string;
+  events: FulcromTradeHistoryEvent[];
+  count: number;
+  source: string;
+  fromBlock: number;
+  toBlock: number;
+  timestamp: number;
+  note?: string;
+}
+
 // API request/response types
 export interface PortfolioRequest {
   address: string;
