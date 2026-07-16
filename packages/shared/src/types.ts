@@ -218,7 +218,7 @@ export interface FulcromTradeHistoryEvent {
   blockNumber: number;
   blockTime: number;
   isoTime: string;
-  action: 'Increase' | 'Decrease' | 'Close' | 'Liquidation';
+  action: 'Requested' | 'Increase' | 'Decrease' | 'Close' | 'Liquidation' | 'Cancelled';
   pair: string;
   side: 'Long' | 'Short';
   sizeDeltaUsd?: number;

@@ -1,23 +1,12 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
-import { createPublicClient, formatUnits, http, parseAbi } from 'viem';
-import { cronos } from 'viem/chains';
+import { formatUnits } from 'viem';
 import type { FulcromTradeHistoryEvent, FulcromTradeHistoryResponse } from '@cronos-dash/shared';
-import { config } from '../config.js';
 
 const addressSchema = z.string().regex(/^0x[a-fA-F0-9]{40}$/);
 
-const FULCROM = {
-  vault: '0x8C7Ef34aa54210c76D6d5E475f43e0c11f876098',
-} as const;
-
+const FULCROM_TRADES_SUBGRAPH = 'https://graph-v2.cronoslabs.com/subgraphs/name/fulcrom/trades-prod';
 const USD_DECIMALS = 30;
-// About a week on Cronos at current block cadence. Keep this on-demand: Fulcrom's
-// mobile history often shows executed/liquidated fills from 3-7 days ago.
-const DEFAULT_LOOKBACK_BLOCKS = 150_000n;
-const MAX_LOOKBACK_BLOCKS = 500_000n;
-// Cronos' public RPC rejects eth_getLogs ranges over roughly 2,000 blocks.
-const RPC_CHUNK_SIZE = 1_900n;
 
 const TOKENS = [
   { symbol: 'AAVE', address: '0xE657b115bc45c0786274c824f83e3e02CE809185' },
@@ -47,21 +36,69 @@ const TOKENS = [
 
 const TOKEN_BY_ADDRESS = new Map(TOKENS.map((token) => [token.address.toLowerCase(), token.symbol]));
 
-const VAULT_EVENTS_ABI = parseAbi([
-  'event IncreasePosition(bytes32 key, address account, address collateralToken, address indexToken, uint256 collateralDelta, uint256 sizeDelta, bool isLong, uint256 price, uint256 fee)',
-  'event DecreasePosition(bytes32 key, address account, address collateralToken, address indexToken, uint256 collateralDelta, uint256 sizeDelta, bool isLong, uint256 price, uint256 fee)',
-  'event ClosePosition(bytes32 key, uint256 size, uint256 collateral, uint256 averagePrice, uint256 entryFundingRate, uint256 reserveAmount, int256 realisedPnl)',
-  'event LiquidatePosition(bytes32 key, address account, address collateralToken, address indexToken, bool isLong, uint256 size, uint256 collateral, uint256 reserveAmount, int256 realisedPnl, uint256 markPrice)',
-]);
+const ACTIONS = [
+  'CreateIncreasePosition',
+  'ExecuteIncreasePosition',
+  'CancelIncreasePosition',
+  'CreateDecreasePosition',
+  'ExecuteDecreasePosition',
+  'CancelDecreasePosition',
+  'CreateIncreaseOrder',
+  'ExecuteIncreaseOrder',
+  'CancelIncreaseOrder',
+  'CreateDecreaseOrder',
+  'ExecuteDecreaseOrder',
+  'CancelDecreaseOrder',
+  'LiquidatePosition',
+  'PartialLiquidation',
+] as const;
 
-const [INCREASE_EVENT, DECREASE_EVENT, , LIQUIDATE_EVENT] = VAULT_EVENTS_ABI;
+type SubgraphTradeEvent = {
+  id: string;
+  action: string;
+  account: string;
+  txhash: string;
+  timestamp: string;
+  params: string;
+};
 
-function usd(raw: bigint): number {
-  return Number(formatUnits(raw, USD_DECIMALS));
+type ParsedParams = {
+  path?: string[];
+  indexToken?: string;
+  collateralToken?: string;
+  isLong?: boolean;
+  size?: string;
+  sizeDelta?: string;
+  collateral?: string;
+  collateralDelta?: string;
+  markPrice?: string;
+  executionPrice?: string;
+  price?: string;
+  averagePrice?: string;
+  fee?: string;
+  marginFee?: string;
+  collectMarginFeeInUsd?: string;
+  realisedPnl?: string;
+  realizedPnl?: string;
+};
+
+function usd(raw?: string): number | undefined {
+  if (!raw) return undefined;
+  try {
+    return Number(formatUnits(BigInt(raw), USD_DECIMALS));
+  } catch {
+    return undefined;
+  }
 }
 
-function signedUsd(raw: bigint): number {
-  return raw < 0n ? -usd(-raw) : usd(raw);
+function signedUsd(raw?: string): number | undefined {
+  if (!raw) return undefined;
+  try {
+    const value = BigInt(raw);
+    return value < 0n ? -Number(formatUnits(-value, USD_DECIMALS)) : Number(formatUnits(value, USD_DECIMALS));
+  } catch {
+    return undefined;
+  }
 }
 
 function symbolFor(address?: string): string {
@@ -69,31 +106,88 @@ function symbolFor(address?: string): string {
   return TOKEN_BY_ADDRESS.get(address.toLowerCase()) || 'Unknown';
 }
 
-async function getLogsInChunks(
-  client: ReturnType<typeof createPublicClient>,
-  event: typeof INCREASE_EVENT | typeof DECREASE_EVENT | typeof LIQUIDATE_EVENT,
-  account: `0x${string}`,
-  fromBlock: bigint,
-  toBlock: bigint,
-) {
-  const logs = [];
-  for (let start = fromBlock; start <= toBlock; start += RPC_CHUNK_SIZE + 1n) {
-    const end = start + RPC_CHUNK_SIZE > toBlock ? toBlock : start + RPC_CHUNK_SIZE;
-    const chunk = await client.getLogs({
-      address: FULCROM.vault,
-      event,
-      args: { account } as never,
-      fromBlock: start,
-      toBlock: end,
-    });
-    logs.push(...chunk);
+function mapAction(action: string): FulcromTradeHistoryEvent['action'] {
+  if (action === 'LiquidatePosition' || action === 'PartialLiquidation') return 'Liquidation';
+  if (action.startsWith('Create')) return 'Requested';
+  if (action.startsWith('Cancel')) return 'Cancelled';
+  if (action.includes('Decrease')) return 'Decrease';
+  return 'Increase';
+}
+
+function parseTradeEvent(event: SubgraphTradeEvent): FulcromTradeHistoryEvent {
+  let params: ParsedParams = {};
+  try {
+    params = JSON.parse(event.params || '{}') as ParsedParams;
+  } catch {
+    params = {};
   }
-  return logs;
+
+  const indexSymbol = symbolFor(params.indexToken);
+  const collateralSymbol = symbolFor(params.collateralToken || params.path?.[0]);
+  const blockTime = Number(event.timestamp);
+  const action = mapAction(event.action);
+
+  return {
+    id: event.id,
+    txHash: event.txhash,
+    blockNumber: 0,
+    blockTime,
+    isoTime: new Date(blockTime * 1000).toISOString(),
+    action,
+    pair: `${indexSymbol}/USD`,
+    side: params.isLong === false ? 'Short' : 'Long',
+    sizeDeltaUsd: usd(params.sizeDelta),
+    collateralDeltaUsd: usd(params.collateralDelta),
+    sizeUsd: usd(params.size),
+    collateralUsd: usd(params.collateral),
+    priceUsd: usd(params.executionPrice || params.markPrice || params.price || params.averagePrice),
+    feeUsd: usd(params.fee || params.marginFee || params.collectMarginFeeInUsd),
+    realisedPnlUsd: signedUsd(params.realisedPnl || params.realizedPnl),
+    indexSymbol,
+    collateralSymbol,
+  };
+}
+
+async function fetchTradingEvents(address: string, limit: number): Promise<SubgraphTradeEvent[]> {
+  const actionList = ACTIONS.map((action) => action).join(',');
+  const query = `
+    query FulcromTradeHistory($account: String!, $first: Int!) {
+      tradingEvents(
+        first: $first
+        orderBy: timestamp
+        orderDirection: desc
+        where: { account: $account, action_in: [${actionList}] }
+      ) {
+        id
+        action
+        account
+        txhash
+        timestamp
+        params
+      }
+    }
+  `;
+
+  const response = await fetch(FULCROM_TRADES_SUBGRAPH, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ query, variables: { account: address.toLowerCase(), first: limit } }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Fulcrom trades subgraph failed with ${response.status}`);
+  }
+
+  const payload = await response.json() as { data?: { tradingEvents?: SubgraphTradeEvent[] }; errors?: unknown };
+  if (payload.errors) {
+    throw new Error('Fulcrom trades subgraph returned errors');
+  }
+  return payload.data?.tradingEvents || [];
 }
 
 export const fulcromTradeHistoryRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get<{
-    Querystring: { address: string; limit?: string; lookbackBlocks?: string };
+    Querystring: { address: string; limit?: string };
   }>('/fulcrom-trade-history', {
     schema: {
       querystring: {
@@ -102,132 +196,30 @@ export const fulcromTradeHistoryRoutes: FastifyPluginAsync = async (fastify) => 
         properties: {
           address: { type: 'string', pattern: '^0x[a-fA-F0-9]{40}$' },
           limit: { type: 'string' },
-          lookbackBlocks: { type: 'string' },
         },
       },
     },
     handler: async (request, reply) => {
       const { address } = request.query;
       const limit = Math.min(100, Math.max(1, Number(request.query.limit || 25) || 25));
-      const requestedLookback = BigInt(Math.max(1, Number(request.query.lookbackBlocks || DEFAULT_LOOKBACK_BLOCKS) || Number(DEFAULT_LOOKBACK_BLOCKS)));
-      const lookbackBlocks = requestedLookback > MAX_LOOKBACK_BLOCKS ? MAX_LOOKBACK_BLOCKS : requestedLookback;
 
       try {
-        const validAddress = addressSchema.parse(address) as `0x${string}`;
-        const client = createPublicClient({
-          chain: cronos,
-          transport: http(config.cronosRpcUrl),
-        });
-
-        const latestBlock = await client.getBlockNumber();
-        const fromBlock = latestBlock > lookbackBlocks ? latestBlock - lookbackBlocks : 0n;
-
-        const [increaseResult, decreaseResult, liquidationResult] = await Promise.allSettled([
-          getLogsInChunks(client, INCREASE_EVENT, validAddress, fromBlock, latestBlock),
-          getLogsInChunks(client, DECREASE_EVENT, validAddress, fromBlock, latestBlock),
-          getLogsInChunks(client, LIQUIDATE_EVENT, validAddress, fromBlock, latestBlock),
-        ]);
-
-        if (increaseResult.status === 'rejected' && decreaseResult.status === 'rejected' && liquidationResult.status === 'rejected') {
-          fastify.log.error({ increaseResult, decreaseResult, liquidationResult }, 'Fulcrom trade-history log queries failed');
-          return reply.status(502).send({ error: 'Failed to fetch Fulcrom trade history' });
-        }
-
-        const events: FulcromTradeHistoryEvent[] = [];
-        const blockTimeCache = new Map<bigint, { blockTime: number; isoTime: string }>();
-        const getBlockTime = async (blockNumber: bigint) => {
-          const cached = blockTimeCache.get(blockNumber);
-          if (cached) return cached;
-          const block = await client.getBlock({ blockNumber });
-          const blockTime = Number(block.timestamp);
-          const value = { blockTime, isoTime: new Date(blockTime * 1000).toISOString() };
-          blockTimeCache.set(blockNumber, value);
-          return value;
-        };
-
-        const addTrade = async (log: Awaited<ReturnType<typeof getLogsInChunks>>[number], action: 'Increase' | 'Decrease') => {
-          const args = log.args as unknown as {
-            account: `0x${string}`;
-            collateralToken: `0x${string}`;
-            indexToken: `0x${string}`;
-            collateralDelta: bigint;
-            sizeDelta: bigint;
-            isLong: boolean;
-            price: bigint;
-            fee: bigint;
-          };
-          const { blockTime, isoTime } = await getBlockTime(log.blockNumber!);
-          const indexSymbol = symbolFor(args.indexToken);
-          const collateralSymbol = symbolFor(args.collateralToken);
-          events.push({
-            id: `${log.transactionHash}-${log.logIndex}`,
-            txHash: log.transactionHash!,
-            blockNumber: Number(log.blockNumber),
-            blockTime,
-            isoTime,
-            action,
-            pair: `${indexSymbol}/USD`,
-            side: args.isLong ? 'Long' : 'Short',
-            sizeDeltaUsd: usd(args.sizeDelta),
-            collateralDeltaUsd: usd(args.collateralDelta),
-            priceUsd: usd(args.price),
-            feeUsd: usd(args.fee),
-            indexSymbol,
-            collateralSymbol,
-          });
-        };
-
-        const addLiquidation = async (log: Awaited<ReturnType<typeof getLogsInChunks>>[number]) => {
-          const args = log.args as unknown as {
-            account: `0x${string}`;
-            collateralToken: `0x${string}`;
-            indexToken: `0x${string}`;
-            isLong: boolean;
-            size: bigint;
-            collateral: bigint;
-            realisedPnl: bigint;
-            markPrice: bigint;
-          };
-          const { blockTime, isoTime } = await getBlockTime(log.blockNumber!);
-          const indexSymbol = symbolFor(args.indexToken);
-          const collateralSymbol = symbolFor(args.collateralToken);
-          events.push({
-            id: `${log.transactionHash}-${log.logIndex}`,
-            txHash: log.transactionHash!,
-            blockNumber: Number(log.blockNumber),
-            blockTime,
-            isoTime,
-            action: 'Liquidation',
-            pair: `${indexSymbol}/USD`,
-            side: args.isLong ? 'Long' : 'Short',
-            sizeUsd: usd(args.size),
-            collateralUsd: usd(args.collateral),
-            priceUsd: usd(args.markPrice),
-            realisedPnlUsd: signedUsd(args.realisedPnl),
-            indexSymbol,
-            collateralSymbol,
-          });
-        };
-
-        const increaseLogs = increaseResult.status === 'fulfilled' ? increaseResult.value : [];
-        const decreaseLogs = decreaseResult.status === 'fulfilled' ? decreaseResult.value : [];
-        const liquidationLogs = liquidationResult.status === 'fulfilled' ? liquidationResult.value : [];
-
-        await Promise.all([
-          ...increaseLogs.map((log) => addTrade(log, 'Increase')),
-          ...decreaseLogs.map((log) => addTrade(log, 'Decrease')),
-          ...liquidationLogs.map((log) => addLiquidation(log)),
-        ]);
+        const validAddress = addressSchema.parse(address);
+        const events = await fetchTradingEvents(validAddress, limit);
+        const parsedEvents = events.map(parseTradeEvent);
+        const timestamps = parsedEvents.map((event) => event.blockTime).filter(Boolean);
 
         const response: FulcromTradeHistoryResponse = {
           address: validAddress,
-          events: events.sort((a, b) => b.blockNumber - a.blockNumber).slice(0, limit),
-          count: events.length,
-          source: 'fulcrom-vault-events',
-          fromBlock: Number(fromBlock),
-          toBlock: Number(latestBlock),
+          events: parsedEvents,
+          count: parsedEvents.length,
+          source: 'fulcrom-trades-subgraph',
+          fromBlock: 0,
+          toBlock: 0,
           timestamp: Date.now(),
-          note: 'Recent Fulcrom trade history is read from Vault events over a bounded block lookback; older fills may require a larger lookback or dedicated indexer.',
+          note: timestamps.length > 0
+            ? 'Fulcrom history is read from Fulcrom trades subgraph and includes requested, executed, cancelled, and liquidated position events.'
+            : 'No Fulcrom trade-history events were returned by the Fulcrom trades subgraph for this wallet.',
         };
 
         return response;

@@ -224,7 +224,7 @@ export function FulcromPositions({ address, demoMode = false }: { address?: stri
 
           {historyEvents && historyEvents.length === 0 && (
             <div className="mt-4 rounded-lg border border-cro-border bg-cro-dark/60 p-4 text-sm text-cro-muted">
-              No recent Fulcrom trade events found for this wallet in the current lookback window.
+              No Fulcrom trade events were returned for this wallet.
             </div>
           )}
 
@@ -234,7 +234,9 @@ export function FulcromPositions({ address, demoMode = false }: { address?: stri
                 <div key={event.id} className="flex flex-col gap-2 rounded-lg border border-cro-border bg-cro-dark/60 p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <div className="font-medium text-cro-text">{event.action} {event.pair} {event.side}</div>
-                    <div className="font-mono text-xs text-cro-muted">{formatDate(event.isoTime)} · #{event.blockNumber}</div>
+                    <div className="font-mono text-xs text-cro-muted">
+                      {formatDate(event.isoTime)}{event.blockNumber > 0 ? ` · #${event.blockNumber}` : ''}
+                    </div>
                   </div>
                   <div className="flex items-center gap-3 sm:text-right">
                     <div className="font-mono text-cro-text">{formatUsd(event.sizeDeltaUsd ?? event.sizeUsd ?? 0)}</div>
@@ -505,7 +507,7 @@ export function FulcromPositions({ address, demoMode = false }: { address?: stri
 
         {historyEvents && historyEvents.length === 0 && (
           <div className="mt-4 rounded-lg border border-cro-border bg-cro-dark/60 p-4 text-sm text-cro-muted">
-            No recent Fulcrom trade events found for this wallet in the current lookback window.
+            No Fulcrom trade events were returned for this wallet.
           </div>
         )}
 
@@ -530,10 +532,9 @@ export function FulcromPositions({ address, demoMode = false }: { address?: stri
                 const collateral = event.collateralDeltaUsd ?? event.collateralUsd ?? 0;
                 return (
                   <div key={event.id} className="grid gap-3 p-3 text-sm sm:grid-cols-[1.1fr_1fr_0.9fr_0.9fr_0.9fr_0.7fr] sm:items-center sm:gap-0">
-                    <div>
-                      <div className="font-medium text-cro-text">{formatDate(event.isoTime)}</div>
-                      <div className="font-mono text-xs text-cro-muted">#{event.blockNumber}</div>
-                    </div>
+                      <div className="font-mono text-xs text-cro-muted">
+                        {formatDate(event.isoTime)}{event.blockNumber > 0 ? ` · #${event.blockNumber}` : ''}
+                      </div>
                     <div className="flex flex-wrap items-center gap-2">
                       <span className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${actionTone}`}>{event.action}</span>
                       <span className="font-medium text-cro-text">{event.pair}</span>
