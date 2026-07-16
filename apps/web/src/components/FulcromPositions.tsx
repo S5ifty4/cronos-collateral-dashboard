@@ -270,8 +270,8 @@ export function FulcromPositions({ address, demoMode = false }: { address?: stri
     ? ((simulatedMarkPrice - position.entryPrice) / position.entryPrice) * 100
     : 0;
   const equityBufferUsd = Math.max(0, simulatedNetValueUsd - Math.abs(simulatedPnlUsd));
-  const sliderMin = -10;
-  const sliderMax = 10;
+  const sliderMin = -100;
+  const sliderMax = 100;
   const rangeLow = position.markPrice * (1 + sliderMin / 100);
   const rangeHigh = position.markPrice * (1 + sliderMax / 100);
   const markPositionPct = clamp(((simulatedMarkPrice - rangeLow) / (rangeHigh - rangeLow)) * 100, 0, 100);
