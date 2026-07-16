@@ -12,7 +12,9 @@ const FULCROM = {
 } as const;
 
 const USD_DECIMALS = 30;
-const DEFAULT_LOOKBACK_BLOCKS = 50_000n;
+// About a week on Cronos at current block cadence. Keep this on-demand: Fulcrom's
+// mobile history often shows executed/liquidated fills from 3-7 days ago.
+const DEFAULT_LOOKBACK_BLOCKS = 150_000n;
 const MAX_LOOKBACK_BLOCKS = 500_000n;
 // Cronos' public RPC rejects eth_getLogs ranges over roughly 2,000 blocks.
 const RPC_CHUNK_SIZE = 1_900n;
