@@ -72,6 +72,14 @@ export async function fetchFulcromPositions(address: string): Promise<FulcromPos
   return res.json();
 }
 
+export async function fetchMoonlanderPositions(address: string): Promise<FulcromPositionsResponse> {
+  const res = await fetch(`${API_BASE}/api/moonlander-positions?address=${encodeURIComponent(address)}`);
+  if (!res.ok) {
+    throw new Error('Failed to fetch Moonlander positions');
+  }
+  return res.json();
+}
+
 export async function fetchFulcromTradeHistory(address: string): Promise<FulcromTradeHistoryResponse> {
   const res = await fetch(`${API_BASE}/api/fulcrom-trade-history?address=${encodeURIComponent(address)}`);
   if (!res.ok) {

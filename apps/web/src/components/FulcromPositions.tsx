@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { FulcromPosition, FulcromTradeHistoryEvent } from '@cronos-dash/shared';
-import { fetchFulcromPositions, fetchFulcromTradeHistory, fetchPrices } from '@/lib/api';
+import { fetchFulcromPositions, fetchFulcromTradeHistory, fetchMoonlanderPositions } from '@/lib/api';
 
 const FULCROM_REFERENCE_POSITION: FulcromPosition = {
   platform: 'Fulcrom Finance',
@@ -193,49 +193,27 @@ export function FulcromPositions({
     enabled: !!address && !demoMode && !isMoonlander,
     refetchInterval: 30000,
   });
+  const moonlanderQuery = useQuery({
+    queryKey: ['moonlander-positions', address],
+    queryFn: () => fetchMoonlanderPositions(address!),
+    enabled: !!address && !demoMode && isMoonlander,
+    refetchInterval: 30000,
+  });
   const historyQuery = useQuery({
     queryKey: ['fulcrom-trade-history', address],
     queryFn: () => fetchFulcromTradeHistory(address!),
     enabled: false,
   });
-  const moonlanderPricesQuery = useQuery({
-    queryKey: ['moonlander-reference-prices'],
-    queryFn: fetchPrices,
-    enabled: isMoonlander,
-    refetchInterval: 30000,
-  });
 
-  const livePositions = data?.positions || [];
-  const moonlanderLivePrice = moonlanderPricesQuery.data?.CRO;
-  const moonlanderPosition = moonlanderLivePrice && MOONLANDER_REFERENCE_POSITION.sizeTokenAmount
-    ? (() => {
-        const sizeTokenAmount = MOONLANDER_REFERENCE_POSITION.sizeTokenAmount;
-        const liveMarkPrice = moonlanderLivePrice;
-        const sizeUsd = sizeTokenAmount * liveMarkPrice;
-        const pnlUsd = (liveMarkPrice - MOONLANDER_REFERENCE_POSITION.entryPrice) * sizeTokenAmount * (MOONLANDER_REFERENCE_POSITION.side === 'Long' ? 1 : -1);
-        const feesUsd = MOONLANDER_REFERENCE_POSITION.feesUsd || 0;
-        const collateralUsd = MOONLANDER_REFERENCE_POSITION.collateralUsd;
-        const pnlPct = collateralUsd > 0 ? (pnlUsd / collateralUsd) * 100 : 0;
-        return {
-          ...MOONLANDER_REFERENCE_POSITION,
-          markPrice: liveMarkPrice,
-          sizeUsd,
-          pnlUsd,
-          pnlPct,
-          netValueUsd: collateralUsd + pnlUsd - feesUsd,
-          note: 'Manual Moonlander position with live CRO price-derived PnL',
-        };
-      })()
-    : MOONLANDER_REFERENCE_POSITION;
-  const positions = isMoonlander
-    ? [moonlanderPosition]
-    : demoMode
-      ? [FULCROM_REFERENCE_POSITION]
-      : livePositions;
-  const historyEvents = isMoonlander ? undefined : demoMode ? REFERENCE_HISTORY : historyQuery.data?.events;
+  const activeData = isMoonlander ? moonlanderQuery.data : data;
+  const activeLoading = isMoonlander ? moonlanderQuery.isLoading : isLoading;
+  const activeError = isMoonlander ? moonlanderQuery.error : error;
+  const livePositions = activeData?.positions || [];
+  const positions = livePositions;
+  const historyEvents = isMoonlander ? undefined : historyQuery.data?.events;
   const position = positions[Math.min(selectedPositionIndex, Math.max(0, positions.length - 1))] || null;
 
-  if (isLoading) {
+  if (activeLoading) {
     return (
       <div className="rounded-xl border border-cro-border bg-cro-card p-6 text-center text-cro-muted">
         Loading {platformLabel} positions…
@@ -243,7 +221,7 @@ export function FulcromPositions({
     );
   }
 
-  if (error) {
+  if (activeError) {
     return (
       <div className="rounded-xl border border-cro-danger/40 bg-cro-danger/5 p-6 text-center">
         <div className="font-semibold text-cro-danger">Failed to load {platformLabel} positions</div>
@@ -257,7 +235,7 @@ export function FulcromPositions({
       <div className="space-y-6">
         <div className="rounded-xl border border-cro-border bg-cro-card p-6 text-center">
           <div className="font-semibold text-cro-text">No open {platformLabel} positions</div>
-          <div className="mt-1 text-sm text-cro-muted">Open perps positions for this wallet will appear here automatically when a live adapter is available.</div>
+          <div className="mt-1 text-sm text-cro-muted">{demoMode ? 'Connect your wallet to load live perps positions.' : 'Open perps positions for this wallet will appear here automatically.'}</div>
         </div>
 
         <div className="rounded-xl border border-cro-border bg-cro-card p-4 sm:p-5">
@@ -362,7 +340,7 @@ export function FulcromPositions({
               </div>
               <p className="mt-1 max-w-2xl text-sm text-cro-muted">
                 {isMoonlander
-                  ? 'Moonlander CRO long with live CRO price-derived PnL. Collateral, entry, liquidation, and TP are seeded from your latest screenshot until a full Moonlander adapter is wired.'
+                  ? 'Track Moonlander CRO perps, liquidation buffer, collateral, and profit or loss from the connected wallet.'
                   : 'Track leveraged CRO exposure, liquidation buffer, collateral, and simulated profit or loss in one place.'}
               </p>
             </div>
@@ -370,7 +348,6 @@ export function FulcromPositions({
           <div className="rounded-xl border border-cro-border bg-cro-dark/70 px-4 py-3 text-sm">
             <div className="text-cro-muted">Platform</div>
             <div className="mt-1 font-semibold text-cro-text">{position.platform}</div>
-            <div className="mt-1 text-xs text-cro-muted">{position.source === 'live' ? 'Live on-chain' : isMoonlander ? (moonlanderLivePrice ? 'Live price PnL' : 'Manual fallback') : 'Demo data'}</div>
           </div>
         </div>
 
@@ -580,7 +557,7 @@ export function FulcromPositions({
 
         {isMoonlander && (
           <div className="mt-4 rounded-lg border border-cro-border bg-cro-dark/60 p-4 text-sm text-cro-muted">
-            Moonlander PnL refreshes from the live CRO price every 30 seconds. Position inputs are seeded from your screenshot until a full Moonlander position/history adapter is wired.
+            Moonlander positions are read from the connected wallet. Trade history is not shown yet.
           </div>
         )}
 
