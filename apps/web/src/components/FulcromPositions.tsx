@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { FulcromPosition, FulcromTradeHistoryEvent } from '@cronos-dash/shared';
-import { fetchFulcromPositions, fetchFulcromTradeHistory } from '@/lib/api';
+import { fetchFulcromPositions, fetchFulcromTradeHistory, fetchPrices } from '@/lib/api';
 
 const FULCROM_REFERENCE_POSITION: FulcromPosition = {
   platform: 'Fulcrom Finance',
@@ -46,9 +46,10 @@ const MOONLANDER_REFERENCE_POSITION: FulcromPosition = {
   sizeTokenAmount: 255409.596049,
   takeProfitPrice: 0.06031,
   takeProfitPnlPct: 100.02,
+  feesUsd: 7.24,
   slippagePct: 1,
   orderType: 'Market',
-  note: 'Manual Moonlander position from latest screenshot',
+  note: 'Manual Moonlander position with live CRO price-derived PnL',
 };
 
 const REFERENCE_HISTORY: FulcromTradeHistoryEvent[] = [
@@ -197,10 +198,37 @@ export function FulcromPositions({
     queryFn: () => fetchFulcromTradeHistory(address!),
     enabled: false,
   });
+  const moonlanderPricesQuery = useQuery({
+    queryKey: ['moonlander-reference-prices'],
+    queryFn: fetchPrices,
+    enabled: isMoonlander,
+    refetchInterval: 30000,
+  });
 
   const livePositions = data?.positions || [];
+  const moonlanderLivePrice = moonlanderPricesQuery.data?.CRO;
+  const moonlanderPosition = moonlanderLivePrice && MOONLANDER_REFERENCE_POSITION.sizeTokenAmount
+    ? (() => {
+        const sizeTokenAmount = MOONLANDER_REFERENCE_POSITION.sizeTokenAmount;
+        const liveMarkPrice = moonlanderLivePrice;
+        const sizeUsd = sizeTokenAmount * liveMarkPrice;
+        const pnlUsd = (liveMarkPrice - MOONLANDER_REFERENCE_POSITION.entryPrice) * sizeTokenAmount * (MOONLANDER_REFERENCE_POSITION.side === 'Long' ? 1 : -1);
+        const feesUsd = MOONLANDER_REFERENCE_POSITION.feesUsd || 0;
+        const collateralUsd = MOONLANDER_REFERENCE_POSITION.collateralUsd;
+        const pnlPct = collateralUsd > 0 ? (pnlUsd / collateralUsd) * 100 : 0;
+        return {
+          ...MOONLANDER_REFERENCE_POSITION,
+          markPrice: liveMarkPrice,
+          sizeUsd,
+          pnlUsd,
+          pnlPct,
+          netValueUsd: collateralUsd + pnlUsd - feesUsd,
+          note: 'Manual Moonlander position with live CRO price-derived PnL',
+        };
+      })()
+    : MOONLANDER_REFERENCE_POSITION;
   const positions = isMoonlander
-    ? [MOONLANDER_REFERENCE_POSITION]
+    ? [moonlanderPosition]
     : demoMode
       ? [FULCROM_REFERENCE_POSITION]
       : livePositions;
@@ -334,7 +362,7 @@ export function FulcromPositions({
               </div>
               <p className="mt-1 max-w-2xl text-sm text-cro-muted">
                 {isMoonlander
-                  ? 'Manual Moonlander CRO long from the latest screenshot, with liquidation buffer, collateral, fees, and target price in one place.'
+                  ? 'Moonlander CRO long with live CRO price-derived PnL. Collateral, entry, liquidation, and TP are seeded from your latest screenshot until a full Moonlander adapter is wired.'
                   : 'Track leveraged CRO exposure, liquidation buffer, collateral, and simulated profit or loss in one place.'}
               </p>
             </div>
@@ -342,7 +370,7 @@ export function FulcromPositions({
           <div className="rounded-xl border border-cro-border bg-cro-dark/70 px-4 py-3 text-sm">
             <div className="text-cro-muted">Platform</div>
             <div className="mt-1 font-semibold text-cro-text">{position.platform}</div>
-            <div className="mt-1 text-xs text-cro-muted">{position.source === 'live' ? 'Live on-chain' : isMoonlander ? 'Manual screenshot' : 'Demo data'}</div>
+            <div className="mt-1 text-xs text-cro-muted">{position.source === 'live' ? 'Live on-chain' : isMoonlander ? (moonlanderLivePrice ? 'Live price PnL' : 'Manual fallback') : 'Demo data'}</div>
           </div>
         </div>
 
@@ -552,7 +580,7 @@ export function FulcromPositions({
 
         {isMoonlander && (
           <div className="mt-4 rounded-lg border border-cro-border bg-cro-dark/60 p-4 text-sm text-cro-muted">
-            Moonlander history is not wired to a live adapter yet. This card tracks the manually captured open position from your screenshot.
+            Moonlander PnL refreshes from the live CRO price every 30 seconds. Position inputs are seeded from your screenshot until a full Moonlander position/history adapter is wired.
           </div>
         )}
 
