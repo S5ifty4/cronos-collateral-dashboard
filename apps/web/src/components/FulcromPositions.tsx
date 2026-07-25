@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { FulcromPosition, FulcromTradeHistoryEvent } from '@cronos-dash/shared';
 import { fetchFulcromPositions, fetchFulcromTradeHistory } from '@/lib/api';
 
-const REFERENCE_POSITION: FulcromPosition = {
+const FULCROM_REFERENCE_POSITION: FulcromPosition = {
   platform: 'Fulcrom Finance',
   pair: 'CRO/USD',
   side: 'Long',
@@ -23,6 +23,33 @@ const REFERENCE_POSITION: FulcromPosition = {
   indexSymbol: 'CRO',
   collateralSymbol: 'USDC',
   source: 'demo',
+};
+
+const MOONLANDER_REFERENCE_POSITION: FulcromPosition = {
+  platform: 'Moonlander',
+  pair: 'CRO/USD',
+  side: 'Long',
+  leverage: 15,
+  netValueUsd: 970,
+  pnlUsd: 0,
+  pnlPct: 0,
+  sizeUsd: 14549.27,
+  collateralUsd: 970,
+  netCollateralUsd: 962.51,
+  markPrice: 0.05648,
+  entryPrice: 0.05654,
+  liquidationPrice: 0.05336,
+  openOrders: 1,
+  indexSymbol: 'CRO',
+  collateralSymbol: 'USDC.e',
+  source: 'demo',
+  sizeTokenAmount: 257339.477932,
+  takeProfitPrice: 0.05842,
+  takeProfitPnlPct: 49.11,
+  feesUsd: 7.49,
+  slippagePct: 1,
+  orderType: 'Market',
+  note: 'Manual Moonlander position from latest screenshot',
 };
 
 const REFERENCE_HISTORY: FulcromTradeHistoryEvent[] = [
@@ -145,13 +172,25 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
-export function FulcromPositions({ address, demoMode = false }: { address?: string; demoMode?: boolean }) {
+type PerpsPlatform = 'fulcrom' | 'moonlander';
+
+export function FulcromPositions({
+  address,
+  demoMode = false,
+  platform = 'fulcrom',
+}: {
+  address?: string;
+  demoMode?: boolean;
+  platform?: PerpsPlatform;
+}) {
   const [priceMovePct, setPriceMovePct] = useState(0);
   const [selectedPositionIndex, setSelectedPositionIndex] = useState(0);
+  const isMoonlander = platform === 'moonlander';
+  const platformLabel = isMoonlander ? 'Moonlander' : 'Fulcrom';
   const { data, isLoading, error } = useQuery({
     queryKey: ['fulcrom-positions', address],
     queryFn: () => fetchFulcromPositions(address!),
-    enabled: !!address && !demoMode,
+    enabled: !!address && !demoMode && !isMoonlander,
     refetchInterval: 30000,
   });
   const historyQuery = useQuery({
@@ -161,14 +200,18 @@ export function FulcromPositions({ address, demoMode = false }: { address?: stri
   });
 
   const livePositions = data?.positions || [];
-  const positions = demoMode ? [REFERENCE_POSITION] : livePositions;
-  const historyEvents = demoMode ? REFERENCE_HISTORY : historyQuery.data?.events;
+  const positions = isMoonlander
+    ? [MOONLANDER_REFERENCE_POSITION]
+    : demoMode
+      ? [FULCROM_REFERENCE_POSITION]
+      : livePositions;
+  const historyEvents = isMoonlander ? undefined : demoMode ? REFERENCE_HISTORY : historyQuery.data?.events;
   const position = positions[Math.min(selectedPositionIndex, Math.max(0, positions.length - 1))] || null;
 
   if (isLoading) {
     return (
       <div className="rounded-xl border border-cro-border bg-cro-card p-6 text-center text-cro-muted">
-        Loading Fulcrom positions…
+        Loading {platformLabel} positions…
       </div>
     );
   }
@@ -176,8 +219,8 @@ export function FulcromPositions({ address, demoMode = false }: { address?: stri
   if (error) {
     return (
       <div className="rounded-xl border border-cro-danger/40 bg-cro-danger/5 p-6 text-center">
-        <div className="font-semibold text-cro-danger">Failed to load Fulcrom positions</div>
-        <div className="mt-1 text-sm text-cro-muted">Try again shortly, or verify directly on Fulcrom.</div>
+        <div className="font-semibold text-cro-danger">Failed to load {platformLabel} positions</div>
+        <div className="mt-1 text-sm text-cro-muted">Try again shortly, or verify directly on {platformLabel}.</div>
       </div>
     );
   }
@@ -186,8 +229,8 @@ export function FulcromPositions({ address, demoMode = false }: { address?: stri
     return (
       <div className="space-y-6">
         <div className="rounded-xl border border-cro-border bg-cro-card p-6 text-center">
-          <div className="font-semibold text-cro-text">No open Fulcrom positions</div>
-          <div className="mt-1 text-sm text-cro-muted">Open perps positions for this wallet will appear here automatically.</div>
+          <div className="font-semibold text-cro-text">No open {platformLabel} positions</div>
+          <div className="mt-1 text-sm text-cro-muted">Open perps positions for this wallet will appear here automatically when a live adapter is available.</div>
         </div>
 
         <div className="rounded-xl border border-cro-border bg-cro-card p-4 sm:p-5">
@@ -195,10 +238,10 @@ export function FulcromPositions({ address, demoMode = false }: { address?: stri
             <div>
               <h3 className="font-semibold text-cro-text">Trade History</h3>
               <div className="mt-1 text-sm text-cro-muted">
-                Recent Fulcrom increases, decreases, and liquidations for this wallet.
+                Recent {platformLabel} increases, decreases, and liquidations for this wallet.
               </div>
             </div>
-            {!demoMode && (
+            {!demoMode && !isMoonlander && (
               <button
                 type="button"
                 onClick={() => historyQuery.refetch()}
@@ -210,13 +253,13 @@ export function FulcromPositions({ address, demoMode = false }: { address?: stri
             )}
           </div>
 
-          {historyQuery.error && !demoMode && (
+          {historyQuery.error && !demoMode && !isMoonlander && (
             <div className="mt-4 rounded-lg border border-cro-danger/30 bg-cro-danger/5 p-3 text-sm text-cro-danger">
-              Failed to load Fulcrom trade history. Try again shortly, or verify directly on Fulcrom.
+              Failed to load {platformLabel} trade history. Try again shortly, or verify directly on {platformLabel}.
             </div>
           )}
 
-          {!historyEvents && !historyQuery.error && !demoMode && (
+          {!historyEvents && !historyQuery.error && !demoMode && !isMoonlander && (
             <div className="mt-4 rounded-lg border border-cro-border bg-cro-dark/60 p-4 text-sm text-cro-muted">
               Trade history is loaded on demand to avoid scanning Vault logs on every dashboard refresh.
             </div>
@@ -224,7 +267,7 @@ export function FulcromPositions({ address, demoMode = false }: { address?: stri
 
           {historyEvents && historyEvents.length === 0 && (
             <div className="mt-4 rounded-lg border border-cro-border bg-cro-dark/60 p-4 text-sm text-cro-muted">
-              No Fulcrom trade events were returned for this wallet.
+              No {platformLabel} trade events were returned for this wallet.
             </div>
           )}
 
@@ -285,20 +328,22 @@ export function FulcromPositions({ address, demoMode = false }: { address?: stri
             <FulcromHexIcon />
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-xl font-semibold text-cro-text sm:text-2xl">Fulcrom Perps</h2>
+                <h2 className="text-xl font-semibold text-cro-text sm:text-2xl">{platformLabel} Perps</h2>
                 <span className="rounded-full border border-purple-400/40 bg-purple-500/10 px-2.5 py-1 text-xs font-semibold text-purple-200">
                   Leveraged position
                 </span>
               </div>
               <p className="mt-1 max-w-2xl text-sm text-cro-muted">
-                Track leveraged CRO exposure, liquidation buffer, collateral, and simulated profit or loss in one place.
+                {isMoonlander
+                  ? 'Manual Moonlander CRO long from the latest screenshot, with liquidation buffer, collateral, fees, and target price in one place.'
+                  : 'Track leveraged CRO exposure, liquidation buffer, collateral, and simulated profit or loss in one place.'}
               </p>
             </div>
           </div>
           <div className="rounded-xl border border-cro-border bg-cro-dark/70 px-4 py-3 text-sm">
             <div className="text-cro-muted">Platform</div>
             <div className="mt-1 font-semibold text-cro-text">{position.platform}</div>
-            <div className="mt-1 text-xs text-cro-muted">{position.source === 'live' ? 'Live on-chain' : 'Demo data'}</div>
+            <div className="mt-1 text-xs text-cro-muted">{position.source === 'live' ? 'Live on-chain' : isMoonlander ? 'Manual screenshot' : 'Demo data'}</div>
           </div>
         </div>
 
@@ -324,7 +369,7 @@ export function FulcromPositions({ address, demoMode = false }: { address?: stri
       {positions.length > 1 && (
         <div className="rounded-xl border border-cro-border bg-cro-card p-3">
           <div className="flex items-center gap-2 overflow-x-auto">
-            <span className="px-2 text-xs text-cro-muted whitespace-nowrap">Fulcrom positions:</span>
+            <span className="px-2 text-xs text-cro-muted whitespace-nowrap">{platformLabel} positions:</span>
             {positions.map((p, index) => (
               <button
                 key={`${p.pair}-${p.side}-${index}`}
@@ -354,9 +399,22 @@ export function FulcromPositions({ address, demoMode = false }: { address?: stri
           subtext={`CRO vs entry: ${formatSignedNumber(priceMoveToEntryPct, 2)}%`}
           tone={pnlTone}
         />
-        <MetricCard label="Position Size" value={formatUsd(position.sizeUsd)} subtext={`${formatNumber(position.leverage, 1)}x notional exposure`} />
+        <MetricCard
+          label="Position Size"
+          value={formatUsd(position.sizeUsd)}
+          subtext={position.sizeTokenAmount ? `${formatNumber(position.sizeTokenAmount, 2)} ${position.indexSymbol}` : `${formatNumber(position.leverage, 1)}x notional exposure`}
+        />
         <MetricCard label="Collateral" value={formatUsd(position.collateralUsd)} subtext={`Net: ${formatUsd(position.netCollateralUsd)}`} />
       </div>
+
+      {(position.takeProfitPrice || position.stopLossPrice || position.feesUsd || position.slippagePct || position.orderType) && (
+        <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
+          {position.takeProfitPrice && <MetricCard label="Take Profit" value={formatPrice(position.takeProfitPrice)} subtext={position.takeProfitPnlPct ? `Target PnL ${formatSignedNumber(position.takeProfitPnlPct, 2)}%` : undefined} tone="success" />}
+          <MetricCard label="Stop Loss" value={position.stopLossPrice ? formatPrice(position.stopLossPrice) : 'Not set'} />
+          {position.feesUsd !== undefined && <MetricCard label="Fees" value={formatUsd(position.feesUsd)} subtext={position.orderType ? `${position.orderType} order` : undefined} />}
+          {position.slippagePct !== undefined && <MetricCard label="Slippage" value={`${formatNumber(position.slippagePct, 0)}%`} />}
+        </div>
+      )}
 
       <div className="rounded-xl border border-cro-cyan/30 bg-cro-card p-4 sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -478,10 +536,10 @@ export function FulcromPositions({ address, demoMode = false }: { address?: stri
           <div>
             <h3 className="font-semibold text-cro-text">Trade History</h3>
             <div className="mt-1 text-sm text-cro-muted">
-              Recent Fulcrom increases, decreases, and liquidations for this wallet.
+              Recent {platformLabel} increases, decreases, and liquidations for this wallet.
             </div>
           </div>
-          {!demoMode && (
+          {!demoMode && !isMoonlander && (
             <button
               type="button"
               onClick={() => historyQuery.refetch()}
@@ -493,13 +551,19 @@ export function FulcromPositions({ address, demoMode = false }: { address?: stri
           )}
         </div>
 
-        {historyQuery.error && !demoMode && (
-          <div className="mt-4 rounded-lg border border-cro-danger/30 bg-cro-danger/5 p-3 text-sm text-cro-danger">
-            Failed to load Fulcrom trade history. Try again shortly, or verify directly on Fulcrom.
+        {isMoonlander && (
+          <div className="mt-4 rounded-lg border border-cro-border bg-cro-dark/60 p-4 text-sm text-cro-muted">
+            Moonlander history is not wired to a live adapter yet. This card tracks the manually captured open position from your screenshot.
           </div>
         )}
 
-        {!historyEvents && !historyQuery.error && !demoMode && (
+        {historyQuery.error && !demoMode && !isMoonlander && (
+          <div className="mt-4 rounded-lg border border-cro-danger/30 bg-cro-danger/5 p-3 text-sm text-cro-danger">
+            Failed to load {platformLabel} trade history. Try again shortly, or verify directly on {platformLabel}.
+          </div>
+        )}
+
+        {!historyEvents && !historyQuery.error && !demoMode && !isMoonlander && (
           <div className="mt-4 rounded-lg border border-cro-border bg-cro-dark/60 p-4 text-sm text-cro-muted">
             Trade history is loaded on demand to avoid scanning Vault logs on every dashboard refresh.
           </div>
@@ -507,7 +571,7 @@ export function FulcromPositions({ address, demoMode = false }: { address?: stri
 
         {historyEvents && historyEvents.length === 0 && (
           <div className="mt-4 rounded-lg border border-cro-border bg-cro-dark/60 p-4 text-sm text-cro-muted">
-            No Fulcrom trade events were returned for this wallet.
+            No {platformLabel} trade events were returned for this wallet.
           </div>
         )}
 

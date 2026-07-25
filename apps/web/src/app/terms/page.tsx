@@ -109,7 +109,7 @@ export default function TermsPage() {
             <h2 className="text-base font-semibold text-cro-text">5. No Affiliation</h2>
             <p>
               Crollateral is an independent, community-built project. It is not affiliated with, endorsed by,
-              or in any way connected to Tectonic Finance, Crypto.com, Cronos Labs, or any other protocol,
+              or in any way connected to Tectonic Finance, Fulcrom Finance, Moonlander, Crypto.com, Cronos Labs, or any other protocol,
               company, or organization referenced on this site. All trademarks and brand names belong to
               their respective owners.
             </p>

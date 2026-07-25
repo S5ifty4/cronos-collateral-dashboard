@@ -107,7 +107,7 @@ export default function Home() {
             </div>
             {/* Disclaimer */}
             <p className="text-center text-xs text-cro-muted max-w-2xl leading-relaxed">
-              Crollateral is an independent, community-built tool. Not affiliated with Tectonic Finance, Fulcrom Finance, or Crypto.com.
+              Crollateral is an independent, community-built tool. Not affiliated with Tectonic Finance, Fulcrom Finance, Moonlander, or Crypto.com.
               Prices are approximate and may be delayed — always verify your positions directly on the source platform before making
               any decisions. This tool is read-only and never submits transactions or requests wallet signing.
             </p>

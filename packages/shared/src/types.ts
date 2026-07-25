@@ -201,6 +201,14 @@ export interface FulcromPosition {
   indexSymbol: string;
   collateralSymbol: string;
   source: 'live' | 'demo';
+  sizeTokenAmount?: number;
+  takeProfitPrice?: number;
+  takeProfitPnlPct?: number;
+  stopLossPrice?: number;
+  feesUsd?: number;
+  slippagePct?: number;
+  orderType?: string;
+  note?: string;
 }
 
 export interface FulcromPositionsResponse {

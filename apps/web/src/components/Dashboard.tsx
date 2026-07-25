@@ -148,7 +148,9 @@ export function Dashboard() {
   const [demoLT, setDemoLT] = useState(75);
   const [demoAsset, setDemoAsset] = useState('CRO');
   const [selectedLoanIndex, setSelectedLoanIndex] = useState(0);
-  const [activeProtocol, setActiveProtocol] = useState<'tectonic' | 'fulcrom'>('tectonic');
+  const [activeCategory, setActiveCategory] = useState<'lending' | 'perps'>('lending');
+  const [activeLendingProtocol, setActiveLendingProtocol] = useState<'tectonic'>('tectonic');
+  const [activePerpsPlatform, setActivePerpsPlatform] = useState<'fulcrom' | 'moonlander'>('fulcrom');
 
   // Update LT when asset changes
   const handleAssetChange = (symbol: string) => {
@@ -190,30 +192,79 @@ export function Dashboard() {
   const demoPortfolio = demoMode ? createDemoPortfolio(demoPrices, demoCollateral, demoBorrowed, demoLT, demoAsset) : null;
   const activePortfolio = demoMode ? demoPortfolio : portfolio;
 
-  const ProtocolToggle = () => (
+  const CategoryToggle = () => (
     <div className="rounded-2xl border border-cro-border bg-cro-card p-2">
       <div className="grid grid-cols-2 gap-2">
         <button
           type="button"
-          onClick={() => setActiveProtocol('tectonic')}
+          onClick={() => setActiveCategory('lending')}
           className={`rounded-xl px-3 py-3 text-sm font-semibold transition-all sm:text-base ${
-            activeProtocol === 'tectonic'
+            activeCategory === 'lending'
               ? 'bg-cro-cyan text-cro-dark shadow-[0_0_24px_rgba(76,219,255,0.18)]'
               : 'bg-cro-dark text-cro-muted hover:bg-cro-border hover:text-cro-text'
           }`}
         >
-          Tectonic Lending
+          Lending
         </button>
         <button
           type="button"
-          onClick={() => setActiveProtocol('fulcrom')}
+          onClick={() => setActiveCategory('perps')}
           className={`rounded-xl px-3 py-3 text-sm font-semibold transition-all sm:text-base ${
-            activeProtocol === 'fulcrom'
+            activeCategory === 'perps'
               ? 'bg-gradient-to-r from-purple-500 to-cro-cyan text-cro-dark shadow-[0_0_24px_rgba(168,85,247,0.20)]'
               : 'bg-cro-dark text-cro-muted hover:bg-cro-border hover:text-cro-text'
           }`}
         >
-          Fulcrom Perps
+          Perps
+        </button>
+      </div>
+    </div>
+  );
+
+  const LendingSubsectionToggle = () => (
+    <div className="rounded-xl border border-cro-border bg-cro-card p-3">
+      <div className="flex items-center gap-2 overflow-x-auto">
+        <span className="px-2 text-xs text-cro-muted whitespace-nowrap">Lending protocol:</span>
+        <button
+          type="button"
+          onClick={() => setActiveLendingProtocol('tectonic')}
+          className={`whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-all ${
+            activeLendingProtocol === 'tectonic'
+              ? 'bg-cro-cyan text-cro-dark'
+              : 'bg-cro-dark text-cro-muted hover:bg-cro-border hover:text-cro-text'
+          }`}
+        >
+          Tectonic
+        </button>
+      </div>
+    </div>
+  );
+
+  const PerpsSubsectionToggle = () => (
+    <div className="rounded-xl border border-cro-border bg-cro-card p-3">
+      <div className="flex items-center gap-2 overflow-x-auto">
+        <span className="px-2 text-xs text-cro-muted whitespace-nowrap">Perps platform:</span>
+        <button
+          type="button"
+          onClick={() => setActivePerpsPlatform('fulcrom')}
+          className={`whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-all ${
+            activePerpsPlatform === 'fulcrom'
+              ? 'bg-gradient-to-r from-purple-500 to-cro-cyan text-cro-dark'
+              : 'bg-cro-dark text-cro-muted hover:bg-cro-border hover:text-cro-text'
+          }`}
+        >
+          Fulcrom
+        </button>
+        <button
+          type="button"
+          onClick={() => setActivePerpsPlatform('moonlander')}
+          className={`whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-all ${
+            activePerpsPlatform === 'moonlander'
+              ? 'bg-gradient-to-r from-purple-500 to-cro-cyan text-cro-dark'
+              : 'bg-cro-dark text-cro-muted hover:bg-cro-border hover:text-cro-text'
+          }`}
+        >
+          Moonlander
         </button>
       </div>
     </div>
@@ -268,11 +319,12 @@ export function Dashboard() {
     );
   }
 
-  if (activeProtocol === 'fulcrom') {
+  if (activeCategory === 'perps') {
     return (
       <div className="space-y-6">
-        <ProtocolToggle />
-        <FulcromPositions address={address} demoMode={demoMode} />
+        <CategoryToggle />
+        <PerpsSubsectionToggle />
+        <FulcromPositions address={address} demoMode={demoMode} platform={activePerpsPlatform} />
       </div>
     );
   }
@@ -387,7 +439,8 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <ProtocolToggle />
+      <CategoryToggle />
+      <LendingSubsectionToggle />
       {/* Positions Bar + CROpium - Only show when connected (not in demo mode) */}
       {!demoMode && loanPairs.length > 0 && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
