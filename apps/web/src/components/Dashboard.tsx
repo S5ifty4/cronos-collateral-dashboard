@@ -193,15 +193,15 @@ export function Dashboard() {
   const activePortfolio = demoMode ? demoPortfolio : portfolio;
 
   const CategoryToggle = () => (
-    <div className="rounded-2xl border border-cro-border bg-cro-card p-2">
-      <div className="grid grid-cols-2 gap-2">
+    <div className="rounded-2xl border border-cro-border/80 bg-cro-card/70 p-1.5 shadow-[0_0_28px_rgba(76,219,255,0.04)] backdrop-blur">
+      <div className="grid grid-cols-2 gap-1.5">
         <button
           type="button"
           onClick={() => setActiveCategory('lending')}
-          className={`rounded-xl px-3 py-3 text-sm font-semibold transition-all sm:text-base ${
+          className={`rounded-xl px-3 py-2.5 text-sm font-semibold transition-all sm:text-base ${
             activeCategory === 'lending'
-              ? 'bg-cro-cyan text-cro-dark shadow-[0_0_24px_rgba(76,219,255,0.18)]'
-              : 'bg-cro-dark text-cro-muted hover:bg-cro-border hover:text-cro-text'
+              ? 'bg-cro-cyan text-cro-dark shadow-[0_0_22px_rgba(76,219,255,0.16)]'
+              : 'bg-cro-dark/60 text-cro-muted hover:bg-cro-border/60 hover:text-cro-text'
           }`}
         >
           Lending
@@ -209,10 +209,10 @@ export function Dashboard() {
         <button
           type="button"
           onClick={() => setActiveCategory('perps')}
-          className={`rounded-xl px-3 py-3 text-sm font-semibold transition-all sm:text-base ${
+          className={`rounded-xl px-3 py-2.5 text-sm font-semibold transition-all sm:text-base ${
             activeCategory === 'perps'
-              ? 'bg-gradient-to-r from-purple-500 to-cro-cyan text-cro-dark shadow-[0_0_24px_rgba(168,85,247,0.20)]'
-              : 'bg-cro-dark text-cro-muted hover:bg-cro-border hover:text-cro-text'
+              ? 'bg-gradient-to-r from-purple-500 to-cro-cyan text-cro-dark shadow-[0_0_22px_rgba(168,85,247,0.18)]'
+              : 'bg-cro-dark/60 text-cro-muted hover:bg-cro-border/60 hover:text-cro-text'
           }`}
         >
           Perps
@@ -222,51 +222,47 @@ export function Dashboard() {
   );
 
   const LendingSubsectionToggle = () => (
-    <div className="rounded-xl border border-cro-border bg-cro-card p-3">
-      <div className="flex items-center gap-2 overflow-x-auto">
-        <span className="px-2 text-xs text-cro-muted whitespace-nowrap">Lending protocol:</span>
-        <button
-          type="button"
-          onClick={() => setActiveLendingProtocol('tectonic')}
-          className={`whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-all ${
-            activeLendingProtocol === 'tectonic'
-              ? 'bg-cro-cyan text-cro-dark'
-              : 'bg-cro-dark text-cro-muted hover:bg-cro-border hover:text-cro-text'
-          }`}
-        >
-          Tectonic
-        </button>
-      </div>
+    <div className="flex items-center gap-2 overflow-x-auto px-1">
+      <span className="text-[11px] font-semibold uppercase tracking-wide text-cro-muted whitespace-nowrap">Protocol</span>
+      <button
+        type="button"
+        onClick={() => setActiveLendingProtocol('tectonic')}
+        className={`whitespace-nowrap rounded-full border px-4 py-1.5 text-xs font-semibold transition-all sm:text-sm ${
+          activeLendingProtocol === 'tectonic'
+            ? 'border-cro-cyan/50 bg-cro-cyan/15 text-cro-cyan shadow-[0_0_18px_rgba(76,219,255,0.10)]'
+            : 'border-cro-border bg-cro-card/60 text-cro-muted hover:border-cro-cyan/30 hover:text-cro-text'
+        }`}
+      >
+        Tectonic
+      </button>
     </div>
   );
 
   const PerpsSubsectionToggle = () => (
-    <div className="rounded-xl border border-cro-border bg-cro-card p-3">
-      <div className="flex items-center gap-2 overflow-x-auto">
-        <span className="px-2 text-xs text-cro-muted whitespace-nowrap">Perps platform:</span>
-        <button
-          type="button"
-          onClick={() => setActivePerpsPlatform('fulcrom')}
-          className={`whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-all ${
-            activePerpsPlatform === 'fulcrom'
-              ? 'bg-gradient-to-r from-purple-500 to-cro-cyan text-cro-dark'
-              : 'bg-cro-dark text-cro-muted hover:bg-cro-border hover:text-cro-text'
-          }`}
-        >
-          Fulcrom
-        </button>
-        <button
-          type="button"
-          onClick={() => setActivePerpsPlatform('moonlander')}
-          className={`whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-all ${
-            activePerpsPlatform === 'moonlander'
-              ? 'bg-gradient-to-r from-purple-500 to-cro-cyan text-cro-dark'
-              : 'bg-cro-dark text-cro-muted hover:bg-cro-border hover:text-cro-text'
-          }`}
-        >
-          Moonlander
-        </button>
-      </div>
+    <div className="flex items-center gap-2 overflow-x-auto px-1">
+      <span className="text-[11px] font-semibold uppercase tracking-wide text-cro-muted whitespace-nowrap">Platform</span>
+      <button
+        type="button"
+        onClick={() => setActivePerpsPlatform('fulcrom')}
+        className={`whitespace-nowrap rounded-full border px-4 py-1.5 text-xs font-semibold transition-all sm:text-sm ${
+          activePerpsPlatform === 'fulcrom'
+            ? 'border-purple-400/50 bg-purple-500/15 text-purple-200 shadow-[0_0_18px_rgba(168,85,247,0.12)]'
+            : 'border-cro-border bg-cro-card/60 text-cro-muted hover:border-purple-400/30 hover:text-cro-text'
+        }`}
+      >
+        Fulcrom
+      </button>
+      <button
+        type="button"
+        onClick={() => setActivePerpsPlatform('moonlander')}
+        className={`whitespace-nowrap rounded-full border px-4 py-1.5 text-xs font-semibold transition-all sm:text-sm ${
+          activePerpsPlatform === 'moonlander'
+            ? 'border-purple-400/50 bg-purple-500/15 text-purple-200 shadow-[0_0_18px_rgba(168,85,247,0.12)]'
+            : 'border-cro-border bg-cro-card/60 text-cro-muted hover:border-purple-400/30 hover:text-cro-text'
+        }`}
+      >
+        Moonlander
+      </button>
     </div>
   );
 
@@ -321,7 +317,7 @@ export function Dashboard() {
 
   if (activeCategory === 'perps') {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4">
         <CategoryToggle />
         <PerpsSubsectionToggle />
         <FulcromPositions address={address} demoMode={demoMode} platform={activePerpsPlatform} />
@@ -438,24 +434,24 @@ export function Dashboard() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <CategoryToggle />
       <LendingSubsectionToggle />
       {/* Positions Bar + CROpium - Only show when connected (not in demo mode) */}
       {!demoMode && loanPairs.length > 0 && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
           {/* Loan Position Tabs - spans 3 columns (aligns with Health Factor through Total Borrowed) */}
-          <div className="col-span-2 lg:col-span-3 bg-cro-card rounded-xl border border-cro-border p-3 flex items-center">
-            <div className="flex items-center gap-2 overflow-x-auto">
-              <span className="text-xs text-cro-muted px-2 whitespace-nowrap">Positions:</span>
+          <div className="col-span-2 lg:col-span-3 flex items-center overflow-x-auto px-1 py-1">
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-cro-muted whitespace-nowrap">Positions</span>
               {loanPairs.map((loan, idx) => (
                 <button
                   key={loan.id}
                   onClick={() => setSelectedLoanIndex(idx)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+                  className={`whitespace-nowrap rounded-full border px-4 py-1.5 text-xs font-semibold transition-all sm:text-sm ${
                     validSelectedIndex === idx
-                      ? 'bg-cro-cyan text-cro-dark'
-                      : 'bg-cro-dark text-cro-muted hover:text-cro-text hover:bg-cro-border'
+                      ? 'border-cro-cyan/50 bg-cro-cyan/15 text-cro-cyan shadow-[0_0_18px_rgba(76,219,255,0.10)]'
+                      : 'border-cro-border bg-cro-card/60 text-cro-muted hover:border-cro-cyan/30 hover:text-cro-text'
                   }`}
                 >
                   {loan.label}
@@ -601,7 +597,7 @@ export function Dashboard() {
       />
 
       {/* Simulator + Repay with Collateral + Liquidation Scenario + Target Helper */}
-      <div className="space-y-6">
+      <div className="space-y-4">
         <ScenarioSimulator
           key={`scenario-${simulationResetKey}`}
           snapshot={mainSnapshot}
