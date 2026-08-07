@@ -16,6 +16,7 @@ import { LiquidationScenarioBox } from './LiquidationScenarioBox';
 import { LiquidationHistoryBox } from './LiquidationHistoryBox';
 import { TargetHFHelper } from './TargetHFHelper';
 import { FulcromPositions } from './FulcromPositions';
+import { LiquidationHeatmap } from './LiquidationHeatmap';
 
 // Fallback prices for demo mode (used if API fails)
 const FALLBACK_PRICES: Record<string, number> = {
@@ -148,7 +149,7 @@ export function Dashboard() {
   const [demoLT, setDemoLT] = useState(75);
   const [demoAsset, setDemoAsset] = useState('CRO');
   const [selectedLoanIndex, setSelectedLoanIndex] = useState(0);
-  const [activeCategory, setActiveCategory] = useState<'lending' | 'perps'>('lending');
+  const [activeCategory, setActiveCategory] = useState<'lending' | 'perps' | 'market'>('lending');
   const [activeLendingProtocol, setActiveLendingProtocol] = useState<'tectonic'>('tectonic');
   const [activePerpsPlatform, setActivePerpsPlatform] = useState<'fulcrom' | 'moonlander'>('fulcrom');
 
@@ -194,7 +195,7 @@ export function Dashboard() {
 
   const CategoryToggle = () => (
     <div className="rounded-2xl border border-cro-border/80 bg-cro-card/70 p-1.5 shadow-[0_0_28px_rgba(76,219,255,0.04)] backdrop-blur">
-      <div className="grid grid-cols-2 gap-1.5">
+      <div className="grid grid-cols-3 gap-1.5">
         <button
           type="button"
           onClick={() => setActiveCategory('lending')}
@@ -216,6 +217,17 @@ export function Dashboard() {
           }`}
         >
           Perps
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveCategory('market')}
+          className={`rounded-xl px-3 py-2.5 text-sm font-semibold transition-all sm:text-base ${
+            activeCategory === 'market'
+              ? 'bg-gradient-to-r from-cro-cyan to-cro-success text-cro-dark shadow-[0_0_22px_rgba(76,219,255,0.18)]'
+              : 'bg-cro-dark/60 text-cro-muted hover:bg-cro-border/60 hover:text-cro-text'
+          }`}
+        >
+          Market Risk
         </button>
       </div>
     </div>
@@ -310,7 +322,28 @@ export function Dashboard() {
           <p className="text-xs text-cro-muted text-center max-w-xs">
             Explore the simulator with sample data
           </p>
+          <button
+            onClick={() => {
+              setDemoMode(true);
+              setActiveCategory('market');
+            }}
+            className="px-6 py-3 bg-cro-cyan text-cro-dark rounded-lg hover:bg-cro-cyan/90 transition-colors font-semibold"
+          >
+            View CRO Liquidation Heatmap
+          </button>
+          <p className="text-xs text-cro-muted text-center max-w-xs">
+            No wallet needed — market-wide Tectonic, Fulcrom, and Moonlander risk
+          </p>
         </div>
+      </div>
+    );
+  }
+
+  if (activeCategory === 'market') {
+    return (
+      <div className="space-y-4">
+        <CategoryToggle />
+        <LiquidationHeatmap />
       </div>
     );
   }

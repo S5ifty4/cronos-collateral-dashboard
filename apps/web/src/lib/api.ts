@@ -7,6 +7,7 @@ import type {
   LiquidationHistoryResponse,
   FulcromPositionsResponse,
   FulcromTradeHistoryResponse,
+  LiquidationHeatmapResponse,
 } from '@cronos-dash/shared';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -84,6 +85,19 @@ export async function fetchFulcromTradeHistory(address: string): Promise<Fulcrom
   const res = await fetch(`${API_BASE}/api/fulcrom-trade-history?address=${encodeURIComponent(address)}`);
   if (!res.ok) {
     throw new Error('Failed to fetch Fulcrom trade history');
+  }
+  return res.json();
+}
+
+export async function fetchLiquidationHeatmap(params: { platform?: string; side?: string } = {}): Promise<LiquidationHeatmapResponse> {
+  const query = new URLSearchParams({
+    asset: 'CRO',
+    platform: params.platform || 'all',
+    side: params.side || 'downside',
+  });
+  const res = await fetch(`${API_BASE}/api/liquidation-heatmap?${query.toString()}`);
+  if (!res.ok) {
+    throw new Error('Failed to fetch liquidation heatmap');
   }
   return res.json();
 }

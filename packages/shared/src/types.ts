@@ -251,6 +251,63 @@ export interface FulcromTradeHistoryResponse {
   note?: string;
 }
 
+export type LiquidationPlatform = 'tectonic' | 'fulcrom' | 'moonlander';
+export type LiquidationRiskKind = 'lending-debt' | 'perps-notional';
+export type LiquidationSide = 'Long' | 'Short' | 'Borrow';
+
+export interface LiquidationPositionRisk {
+  id: string;
+  platform: LiquidationPlatform;
+  riskKind: LiquidationRiskKind;
+  account?: string;
+  pair: string;
+  side: LiquidationSide;
+  collateralSymbol: string;
+  debtOrIndexSymbol: string;
+  currentPriceUsd: number;
+  liquidationPriceUsd: number;
+  distancePct: number;
+  collateralUsd?: number;
+  debtUsd?: number;
+  notionalUsd?: number;
+  amountAtRiskUsd: number;
+  source: string;
+  updatedAt: number;
+  note?: string;
+}
+
+export interface LiquidationBucketBreakdown {
+  atRiskUsd: number;
+  count: number;
+}
+
+export interface LiquidationBucket {
+  shockPct: number;
+  priceUsd: number;
+  totalAtRiskUsd: number;
+  positionCount: number;
+  byPlatform: Record<LiquidationPlatform, LiquidationBucketBreakdown>;
+  byRiskKind: Record<LiquidationRiskKind, LiquidationBucketBreakdown>;
+}
+
+export interface LiquidationHeatmapSource {
+  platform: LiquidationPlatform;
+  source: string;
+  updatedAt: number;
+  note?: string;
+  ok: boolean;
+}
+
+export interface LiquidationHeatmapResponse {
+  asset: 'CRO';
+  currentPriceUsd: number;
+  buckets: LiquidationBucket[];
+  positions: LiquidationPositionRisk[];
+  sources: LiquidationHeatmapSource[];
+  timestamp: number;
+  note?: string;
+}
+
 // API request/response types
 export interface PortfolioRequest {
   address: string;

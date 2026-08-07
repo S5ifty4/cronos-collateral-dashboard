@@ -9,6 +9,7 @@ import { liquidationHistoryRoutes } from './routes/liquidation-history.js';
 import { fulcromPositionsRoutes } from './routes/fulcrom-positions.js';
 import { fulcromTradeHistoryRoutes } from './routes/fulcrom-trade-history.js';
 import { moonlanderPositionsRoutes } from './routes/moonlander-positions.js';
+import { liquidationHeatmapRoutes } from './routes/liquidation-heatmap.js';
 
 const fastify = Fastify({
   logger: true,
@@ -71,6 +72,7 @@ async function main() {
   await fastify.register(fulcromPositionsRoutes, { prefix: '/api' });
   await fastify.register(fulcromTradeHistoryRoutes, { prefix: '/api' });
   await fastify.register(moonlanderPositionsRoutes, { prefix: '/api' });
+  await fastify.register(liquidationHeatmapRoutes, { prefix: '/api' });
 
   // ── Start ─────────────────────────────────────────────────────────────────────
   try {
