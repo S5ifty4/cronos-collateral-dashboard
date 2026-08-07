@@ -86,7 +86,7 @@ function SummaryCards({ data }: { data: LiquidationHeatmapResponse }) {
       </div>
       <div className="rounded-xl border border-cro-border bg-cro-card p-4">
         <div className="text-xs uppercase tracking-wide text-cro-muted">Sources / rows</div>
-        <div className="mt-2 font-mono text-2xl font-bold text-cro-text">{sourceCount}/{data.sources.length} · {positionCount}</div>
+        <div className="mt-2 font-mono text-2xl font-bold text-cro-text">{sourceCount}/{data.sources.length} · {positionCount > 0 ? positionCount : 'summary'}</div>
         <div className="mt-1 text-xs text-cro-muted">Live collectors / detail rows</div>
       </div>
     </div>
@@ -222,9 +222,10 @@ function DetailRows({ positions }: { positions: LiquidationPositionRisk[] }) {
 export function LiquidationHeatmap() {
   const [platform, setPlatform] = useState<PlatformFilter>('all');
   const [side, setSide] = useState<SideFilter>('downside');
+  const [includeDetails, setIncludeDetails] = useState(false);
   const { data, isLoading, error, refetch, isFetching } = useQuery({
-    queryKey: ['liquidation-heatmap', platform, side],
-    queryFn: () => fetchLiquidationHeatmap({ platform, side }),
+    queryKey: ['liquidation-heatmap', platform, side, includeDetails],
+    queryFn: () => fetchLiquidationHeatmap({ platform, side, includeDetails }),
     refetchInterval: 60_000,
   });
 
@@ -308,7 +309,23 @@ export function LiquidationHeatmap() {
           <HeatmapTable data={data} />
           <SourceNotes data={data} />
           {data.note && <div className="rounded-xl border border-cro-border bg-cro-dark/50 p-4 text-sm text-cro-muted">{data.note}</div>}
-          <DetailRows positions={sortedPositions} />
+          {includeDetails ? (
+            <DetailRows positions={sortedPositions} />
+          ) : (
+            <div className="rounded-xl border border-cro-border bg-cro-card p-5 text-center">
+              <div className="font-semibold text-cro-text">Detail rows are loaded on demand</div>
+              <p className="mx-auto mt-1 max-w-2xl text-sm text-cro-muted">
+                The default heatmap response only returns summary buckets so public page loads stay cheap. Load detail rows when you want wallet-level drilldown.
+              </p>
+              <button
+                type="button"
+                onClick={() => setIncludeDetails(true)}
+                className="mt-4 rounded-lg border border-cro-cyan/40 px-4 py-2 text-sm font-semibold text-cro-cyan hover:bg-cro-cyan/10 transition-colors"
+              >
+                Load detail rows
+              </button>
+            </div>
+          )}
         </>
       )}
     </div>

@@ -20,7 +20,9 @@ const MOONLANDER_PRICE_DECIMALS = 18;
 const MOONLANDER_QTY_DECIMALS = 10;
 const DEFAULT_DOWNSIDE_SHOCKS = [0, -5, -10, -15, -20, -25, -35, -50, -80];
 const DEFAULT_UPSIDE_SHOCKS = [0, 5, 10, 15, 20, 25, 35, 50, 80];
-const CACHE_TTL_MS = 5 * 60_000;
+const COLLECTOR_CACHE_TTL_MS = 5 * 60_000;
+const COLLECTOR_STALE_TTL_MS = 30 * 60_000;
+const COLLECTOR_TIMEOUT_MS = 25_000;
 
 type HeatmapSide = 'downside' | 'upside' | 'both';
 type HeatmapPlatformFilter = 'all' | LiquidationPlatform;
@@ -30,13 +32,13 @@ type CollectorResult = {
   source: LiquidationHeatmapSource;
 };
 
-type CacheEntry = {
-  key: string;
+type CollectorCacheEntry = {
   timestamp: number;
-  response: LiquidationHeatmapResponse;
+  result: CollectorResult;
+  refreshPromise?: Promise<CollectorResult>;
 };
 
-let cache: CacheEntry | null = null;
+const collectorCache: Partial<Record<LiquidationPlatform, CollectorCacheEntry>> = {};
 
 function now() {
   return Date.now();
@@ -475,29 +477,103 @@ function failedSource(platform: LiquidationPlatform, error: unknown): Liquidatio
   };
 }
 
-export async function buildLiquidationHeatmap(options: { platform?: HeatmapPlatformFilter; side?: HeatmapSide } = {}): Promise<LiquidationHeatmapResponse> {
+function collectorForPlatform(platform: LiquidationPlatform, currentPriceUsd: number): () => Promise<CollectorResult> {
+  if (platform === 'tectonic') return () => collectTectonic(currentPriceUsd);
+  if (platform === 'fulcrom') return () => collectFulcrom(currentPriceUsd);
+  return () => collectMoonlander(currentPriceUsd);
+}
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, label: string): Promise<T> {
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        timeout = setTimeout(() => reject(new Error(`${label} timed out after ${timeoutMs}ms`)), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timeout) clearTimeout(timeout);
+  }
+}
+
+function startCollectorRefresh(platform: LiquidationPlatform, currentPriceUsd: number): Promise<CollectorResult> {
+  const entry = collectorCache[platform];
+  if (entry?.refreshPromise) return entry.refreshPromise;
+
+  const refreshPromise = withTimeout(collectorForPlatform(platform, currentPriceUsd)(), COLLECTOR_TIMEOUT_MS, `${platform} liquidation collector`)
+    .then((result) => {
+      collectorCache[platform] = { timestamp: now(), result };
+      return result;
+    })
+    .catch((error) => {
+      const staleEntry = collectorCache[platform];
+      if (staleEntry) {
+        collectorCache[platform] = { ...staleEntry, refreshPromise: undefined };
+      }
+      throw error;
+    });
+
+  if (entry) {
+    collectorCache[platform] = { ...entry, refreshPromise };
+  } else {
+    collectorCache[platform] = { timestamp: 0, result: { positions: [], source: failedSource(platform, new Error('Initial refresh in progress')) }, refreshPromise };
+  }
+
+  refreshPromise.catch(() => undefined);
+  return refreshPromise;
+}
+
+async function getCollectorResult(platform: LiquidationPlatform, currentPriceUsd: number): Promise<CollectorResult> {
+  const entry = collectorCache[platform];
+  const ageMs = entry ? now() - entry.timestamp : Infinity;
+
+  if (entry && entry.timestamp > 0 && ageMs < COLLECTOR_CACHE_TTL_MS) {
+    return entry.result;
+  }
+
+  if (entry && entry.timestamp > 0 && ageMs < COLLECTOR_STALE_TTL_MS) {
+    startCollectorRefresh(platform, currentPriceUsd);
+    return {
+      ...entry.result,
+      source: {
+        ...entry.result.source,
+        note: `${entry.result.source.note || ''} Served from stale cache while refreshing in the background.`.trim(),
+      },
+    };
+  }
+
+  return startCollectorRefresh(platform, currentPriceUsd);
+}
+
+export async function prewarmLiquidationHeatmap(): Promise<void> {
+  try {
+    await buildLiquidationHeatmap({ platform: 'all', side: 'downside', includeDetails: false });
+  } catch (error) {
+    console.warn('[liquidation-heatmap] prewarm failed:', error);
+  }
+}
+
+export async function buildLiquidationHeatmap(options: { platform?: HeatmapPlatformFilter; side?: HeatmapSide; includeDetails?: boolean } = {}): Promise<LiquidationHeatmapResponse> {
   const platform = options.platform || 'all';
   const side = options.side || 'downside';
-  const cacheKey = `${platform}:${side}`;
-  if (cache?.key === cacheKey && now() - cache.timestamp < CACHE_TTL_MS) {
-    return cache.response;
-  }
+  const includeDetails = options.includeDetails ?? false;
 
   const prices = await fetchPrices();
   const currentPriceUsd = prices.CRO || 0;
   if (currentPriceUsd <= 0) throw new Error('CRO price unavailable');
 
-  const collectors: Array<[LiquidationPlatform, () => Promise<CollectorResult>]> = [];
-  if (platform === 'all' || platform === 'tectonic') collectors.push(['tectonic', () => collectTectonic(currentPriceUsd)]);
-  if (platform === 'all' || platform === 'fulcrom') collectors.push(['fulcrom', () => collectFulcrom(currentPriceUsd)]);
-  if (platform === 'all' || platform === 'moonlander') collectors.push(['moonlander', () => collectMoonlander(currentPriceUsd)]);
+  const platforms: LiquidationPlatform[] = [];
+  if (platform === 'all' || platform === 'tectonic') platforms.push('tectonic');
+  if (platform === 'all' || platform === 'fulcrom') platforms.push('fulcrom');
+  if (platform === 'all' || platform === 'moonlander') platforms.push('moonlander');
 
-  const settled = await Promise.allSettled(collectors.map(([, collect]) => collect()));
+  const settled = await Promise.allSettled(platforms.map((collectorPlatform) => getCollectorResult(collectorPlatform, currentPriceUsd)));
   const positions: LiquidationPositionRisk[] = [];
   const sources: LiquidationHeatmapSource[] = [];
 
   settled.forEach((result, index) => {
-    const collectorPlatform = collectors[index][0];
+    const collectorPlatform = platforms[index];
     if (result.status === 'fulfilled') {
       positions.push(...result.value.positions);
       sources.push(result.value.source);
@@ -514,16 +590,15 @@ export async function buildLiquidationHeatmap(options: { platform?: HeatmapPlatf
     .filter((position) => side === 'both' || (side === 'upside' ? position.side === 'Short' : position.side !== 'Short'))
     .sort((a, b) => a.distancePct - b.distancePct);
 
-  const response: LiquidationHeatmapResponse = {
+  return {
     asset: 'CRO',
     currentPriceUsd,
     buckets: buildBuckets(currentPriceUsd, filteredPositions, side),
-    positions: filteredPositions.slice(0, 500),
+    positions: includeDetails ? filteredPositions.slice(0, 500) : [],
     sources,
     timestamp: now(),
-    note: 'Tectonic values are debt at risk. Fulcrom and Moonlander values are perps notional at risk. Perps liquidation prices are planning estimates, not venue guarantees.',
+    note: includeDetails
+      ? 'Tectonic values are debt at risk. Fulcrom and Moonlander values are perps notional at risk. Perps liquidation prices are planning estimates, not venue guarantees.'
+      : 'Summary response only. Add includeDetails=true to return up to 500 at-risk detail rows. Tectonic values are debt at risk; Fulcrom/Moonlander values are perps notional at risk.',
   };
-
-  cache = { key: cacheKey, timestamp: now(), response };
-  return response;
 }

@@ -10,6 +10,7 @@ import { fulcromPositionsRoutes } from './routes/fulcrom-positions.js';
 import { fulcromTradeHistoryRoutes } from './routes/fulcrom-trade-history.js';
 import { moonlanderPositionsRoutes } from './routes/moonlander-positions.js';
 import { liquidationHeatmapRoutes } from './routes/liquidation-heatmap.js';
+import { prewarmLiquidationHeatmap } from './services/liquidation-heatmap.js';
 
 const fastify = Fastify({
   logger: true,
@@ -78,6 +79,7 @@ async function main() {
   try {
     await fastify.listen({ port: config.port, host: config.host });
     console.log(`API server running at http://${config.host}:${config.port}`);
+    prewarmLiquidationHeatmap();
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);

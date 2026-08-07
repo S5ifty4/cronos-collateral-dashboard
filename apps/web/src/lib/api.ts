@@ -89,11 +89,12 @@ export async function fetchFulcromTradeHistory(address: string): Promise<Fulcrom
   return res.json();
 }
 
-export async function fetchLiquidationHeatmap(params: { platform?: string; side?: string } = {}): Promise<LiquidationHeatmapResponse> {
+export async function fetchLiquidationHeatmap(params: { platform?: string; side?: string; includeDetails?: boolean } = {}): Promise<LiquidationHeatmapResponse> {
   const query = new URLSearchParams({
     asset: 'CRO',
     platform: params.platform || 'all',
     side: params.side || 'downside',
+    includeDetails: params.includeDetails ? 'true' : 'false',
   });
   const res = await fetch(`${API_BASE}/api/liquidation-heatmap?${query.toString()}`);
   if (!res.ok) {
