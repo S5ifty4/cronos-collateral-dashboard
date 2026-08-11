@@ -9,3 +9,5 @@ dist
 .turbo
 coverage
 .vercel
+
+apps/web/tsconfig.tsbuildinfo
