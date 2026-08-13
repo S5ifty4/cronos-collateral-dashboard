@@ -309,7 +309,7 @@ export function Dashboard() {
           Connect Your Wallet
         </h2>
         <p className="text-cro-muted text-center max-w-sm mb-6">
-          Connect your wallet to view your Tectonic positions and simulate scenarios.
+          Connect your wallet to review Cronos lending risk, perps exposure, and planning scenarios in one read-only view.
         </p>
         <div className="flex flex-col items-center gap-3">
           <span className="text-cro-muted text-sm">or</span>
@@ -320,7 +320,7 @@ export function Dashboard() {
             Try Demo Mode
           </button>
           <p className="text-xs text-cro-muted text-center max-w-xs">
-            Explore the simulator with sample data
+            Explore the dashboard with example positions
           </p>
           <button
             onClick={() => {
@@ -332,7 +332,7 @@ export function Dashboard() {
             View CRO Liquidation Heatmap
           </button>
           <p className="text-xs text-cro-muted text-center max-w-xs">
-            No wallet needed — market-wide Tectonic, Fulcrom, and Moonlander risk
+            No wallet needed — market-wide CRO liquidation pressure across supported venues
           </p>
         </div>
       </div>
@@ -369,9 +369,9 @@ export function Dashboard() {
   if ((error || !activePortfolio) && !demoMode) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <div className="text-cro-danger mb-2">Failed to load portfolio</div>
+        <div className="text-cro-danger mb-2">Unable to load positions</div>
         <p className="text-cro-muted text-sm">
-          {error instanceof Error ? error.message : 'Unknown error'}
+          Try again shortly, or verify directly on the source platform.
         </p>
       </div>
     );
@@ -385,7 +385,7 @@ export function Dashboard() {
   if (!mainSnapshot) {
     return (
       <div className="text-center py-20 text-cro-muted">
-        No positions found on Tectonic
+        No Tectonic lending positions found for this wallet
       </div>
     );
   }
@@ -495,7 +495,7 @@ export function Dashboard() {
 
           {/* CROpium Banner - spans 1 column (aligns with Total Collateral) */}
           <div className="col-span-2 lg:col-span-1 bg-gradient-to-r from-purple-900/30 to-cro-card rounded-xl border border-purple-500/30 p-3 flex items-center justify-between">
-            <span className="text-sm text-purple-300 font-medium">Take a shot of CROpium</span>
+            <span className="text-sm text-purple-300 font-medium">CROpium corner</span>
             <button
               onClick={() => router.push('/cropium')}
               className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-lg transition-colors"
@@ -519,13 +519,13 @@ export function Dashboard() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <p className="text-cro-cyan font-medium text-sm sm:text-base">Demo Mode</p>
+                <p className="text-cro-cyan font-medium text-sm sm:text-base">Example Portfolio</p>
               </div>
               <button
                 onClick={() => setDemoMode(false)}
                 className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm text-cro-cyan hover:bg-cro-cyan/10 rounded-lg transition-colors"
               >
-                Exit Demo
+                Exit example
               </button>
             </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
@@ -564,7 +564,7 @@ export function Dashboard() {
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs text-cro-muted">LT %</label>
+              <label className="text-xs text-cro-muted">Liq. threshold</label>
               <input
                 type="number"
                 value={demoLT}
@@ -577,7 +577,7 @@ export function Dashboard() {
 
           {/* CROpium Banner - spans 1 column (aligns with Total Collateral) */}
           <div className="col-span-2 lg:col-span-1 bg-gradient-to-r from-purple-900/30 to-cro-card rounded-xl border border-purple-500/30 p-4 flex flex-col items-center justify-center gap-3">
-            <span className="text-sm text-purple-300 font-medium text-center">Take a shot of CROpium</span>
+            <span className="text-sm text-purple-300 font-medium text-center">CROpium corner</span>
             <button
               onClick={() => router.push('/cropium')}
               className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-2xl transition-colors"

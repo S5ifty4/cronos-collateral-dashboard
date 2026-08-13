@@ -49,7 +49,6 @@ const MOONLANDER_REFERENCE_POSITION: FulcromPosition = {
   feesUsd: 7.24,
   slippagePct: 1,
   orderType: 'Market',
-  note: 'Manual Moonlander position with live CRO price-derived PnL',
 };
 
 const REFERENCE_HISTORY: FulcromTradeHistoryEvent[] = [
@@ -235,7 +234,7 @@ export function FulcromPositions({
       <div className="space-y-6">
         <div className="rounded-xl border border-cro-border bg-cro-card p-6 text-center">
           <div className="font-semibold text-cro-text">No open {platformLabel} positions</div>
-          <div className="mt-1 text-sm text-cro-muted">{demoMode ? 'Connect your wallet to load live perps positions.' : 'Open perps positions for this wallet will appear here automatically.'}</div>
+          <div className="mt-1 text-sm text-cro-muted">{demoMode ? 'Connect your wallet to review perps positions.' : 'Open perps positions for this wallet will appear here when available.'}</div>
         </div>
 
         <div className="rounded-xl border border-cro-border bg-cro-card p-4 sm:p-5">
@@ -266,7 +265,7 @@ export function FulcromPositions({
 
           {!historyEvents && !historyQuery.error && !demoMode && !isMoonlander && (
             <div className="mt-4 rounded-lg border border-cro-border bg-cro-dark/60 p-4 text-sm text-cro-muted">
-              Trade history is loaded on demand to avoid scanning Vault logs on every dashboard refresh.
+              Trade history is loaded only when requested so the page stays fast.
             </div>
           )}
 
@@ -557,7 +556,7 @@ export function FulcromPositions({
 
         {isMoonlander && (
           <div className="mt-4 rounded-lg border border-cro-border bg-cro-dark/60 p-4 text-sm text-cro-muted">
-            Moonlander positions are read from the connected wallet. Trade history is not shown yet.
+            Moonlander position tracking is available for the connected wallet. Trade history is not shown yet.
           </div>
         )}
 
@@ -569,7 +568,7 @@ export function FulcromPositions({
 
         {!historyEvents && !historyQuery.error && !demoMode && !isMoonlander && (
           <div className="mt-4 rounded-lg border border-cro-border bg-cro-dark/60 p-4 text-sm text-cro-muted">
-            Trade history is loaded on demand to avoid scanning Vault logs on every dashboard refresh.
+            Trade history is loaded only when requested so the page stays fast.
           </div>
         )}
 

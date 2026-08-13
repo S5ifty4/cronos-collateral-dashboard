@@ -18,9 +18,10 @@ export function ConnectWallet() {
     return (
       <button
         disabled
-        className="px-4 py-2 text-sm font-medium text-cro-text bg-cro-card border border-cro-border rounded-lg opacity-50"
+        className="px-3 py-2 text-xs font-semibold text-cro-text bg-cro-card border border-cro-border rounded-lg opacity-50 sm:px-4 sm:text-sm"
       >
-        Connect Wallet
+        <span className="sm:hidden">Connect</span>
+        <span className="hidden sm:inline">Connect Wallet</span>
       </button>
     );
   }
@@ -48,9 +49,10 @@ export function ConnectWallet() {
   return (
     <button
       onClick={() => open()}
-      className="px-4 py-2 text-sm font-medium text-cro-bg bg-gradient-to-r from-cro-cyan to-cro-accent rounded-lg hover:shadow-lg hover:shadow-cro-cyan/25 transition-all"
+      className="px-3 py-2 text-xs font-semibold text-cro-bg bg-gradient-to-r from-cro-cyan to-cro-accent rounded-lg hover:shadow-lg hover:shadow-cro-cyan/25 transition-all sm:px-4 sm:text-sm"
     >
-      Connect Wallet
+      <span className="sm:hidden">Connect</span>
+      <span className="hidden sm:inline">Connect Wallet</span>
     </button>
   );
 }

@@ -85,9 +85,9 @@ function SummaryCards({ data }: { data: LiquidationHeatmapResponse }) {
         <div className="mt-1 text-xs text-cro-muted">First non-zero risk bucket</div>
       </div>
       <div className="rounded-xl border border-cro-border bg-cro-card p-4">
-        <div className="text-xs uppercase tracking-wide text-cro-muted">Sources / rows</div>
+        <div className="text-xs uppercase tracking-wide text-cro-muted">Coverage</div>
         <div className="mt-2 font-mono text-2xl font-bold text-cro-text">{sourceCount}/{data.sources.length} · {positionCount > 0 ? positionCount : 'summary'}</div>
-        <div className="mt-1 text-xs text-cro-muted">Live collectors / detail rows</div>
+        <div className="mt-1 text-xs text-cro-muted">Active venues · optional detail</div>
       </div>
     </div>
   );
@@ -102,7 +102,7 @@ function HeatmapTable({ data }: { data: LiquidationHeatmapResponse }) {
         <h3 className="font-semibold text-cro-text">CRO liquidation buckets</h3>
         <p className="mt-1 text-sm text-cro-muted">Tectonic is debt at risk. Fulcrom/Moonlander are perps notional at risk.</p>
       </div>
-      <div className="overflow-x-auto">
+      <div className="hidden overflow-x-auto sm:block">
         <table className="w-full min-w-[840px] text-sm">
           <thead className="bg-cro-dark/80 text-xs uppercase tracking-wide text-cro-muted">
             <tr>
@@ -132,6 +132,40 @@ function HeatmapTable({ data }: { data: LiquidationHeatmapResponse }) {
           </tbody>
         </table>
       </div>
+      <div className="divide-y divide-cro-border sm:hidden">
+        {data.buckets.map((bucket) => (
+          <div key={bucket.shockPct} className={`p-4 ${bucketTone(bucket, maxRisk)}`}>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="text-xs uppercase tracking-wide text-cro-muted">CRO move</div>
+                <div className="mt-1 font-mono text-lg font-bold text-cro-text">{formatPct(bucket.shockPct)}</div>
+              </div>
+              <div className="text-right">
+                <div className="text-xs uppercase tracking-wide text-cro-muted">At risk</div>
+                <div className="mt-1 font-mono text-lg font-bold text-cro-cyan">{formatUsd(bucket.totalAtRiskUsd)}</div>
+              </div>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+              <div className="rounded-lg border border-cro-border bg-cro-dark/60 p-2">
+                <div className="text-cro-muted">CRO price</div>
+                <div className="mt-1 font-mono text-cro-text">{formatPrice(bucket.priceUsd)}</div>
+              </div>
+              <div className="rounded-lg border border-cro-border bg-cro-dark/60 p-2">
+                <div className="text-cro-muted">Positions</div>
+                <div className="mt-1 font-mono text-cro-text">{bucket.positionCount}</div>
+              </div>
+              <div className="rounded-lg border border-cro-border bg-cro-dark/60 p-2">
+                <div className="text-cro-muted">Tectonic debt</div>
+                <div className="mt-1 font-mono text-cro-text">{formatUsd(bucket.byPlatform.tectonic.atRiskUsd)}</div>
+              </div>
+              <div className="rounded-lg border border-cro-border bg-cro-dark/60 p-2">
+                <div className="text-cro-muted">Perps notional</div>
+                <div className="mt-1 font-mono text-cro-text">{formatUsd(bucket.byPlatform.fulcrom.atRiskUsd + bucket.byPlatform.moonlander.atRiskUsd)}</div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -145,8 +179,10 @@ function SourceNotes({ data }: { data: LiquidationHeatmapResponse }) {
             <div className="font-semibold capitalize text-cro-text">{source.platform}</div>
             <div className={`rounded-full px-2 py-0.5 text-xs ${source.ok ? 'bg-cro-success/10 text-cro-success' : 'bg-cro-danger/10 text-cro-danger'}`}>{source.ok ? 'OK' : 'Issue'}</div>
           </div>
-          <div className="mt-1 text-xs text-cro-muted">{source.source}</div>
-          {source.note && <p className="mt-2 text-sm text-cro-muted">{source.note}</p>}
+          <div className="mt-1 text-xs text-cro-muted">
+            {source.ok ? 'Included in this market view' : 'Temporarily unavailable'}
+          </div>
+          {source.note && !source.ok && <p className="mt-2 text-sm text-cro-muted">{source.note}</p>}
         </div>
       ))}
     </div>
@@ -174,7 +210,7 @@ function DetailRows({ positions }: { positions: LiquidationPositionRisk[] }) {
           </button>
         )}
       </div>
-      <div className="overflow-x-auto">
+      <div className="hidden overflow-x-auto sm:block">
         <table className="w-full min-w-[920px] text-sm">
           <thead className="bg-cro-dark/80 text-xs uppercase tracking-wide text-cro-muted">
             <tr>
@@ -214,6 +250,47 @@ function DetailRows({ positions }: { positions: LiquidationPositionRisk[] }) {
             )}
           </tbody>
         </table>
+      </div>
+      <div className="divide-y divide-cro-border sm:hidden">
+        {rows.map((position) => (
+          <div key={position.id} className="p-4 text-sm">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="font-semibold capitalize text-cro-text">{position.platform}</div>
+                <div className="mt-1 text-cro-muted">{position.pair} · {position.side}</div>
+              </div>
+              <div className="text-right">
+                <div className="text-xs uppercase tracking-wide text-cro-muted">At risk</div>
+                <div className="mt-1 font-mono text-cro-cyan">{formatUsd(position.amountAtRiskUsd)}</div>
+              </div>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+              <div className="rounded-lg border border-cro-border bg-cro-dark/60 p-2">
+                <div className="text-cro-muted">Wallet</div>
+                <div className="mt-1 font-mono text-cro-text">
+                  {position.account ? (
+                    <a href={explorerAddressUrl(position.account)} target="_blank" rel="noreferrer" className="hover:text-cro-cyan">
+                      {shortAddress(position.account)}
+                    </a>
+                  ) : '—'}
+                </div>
+              </div>
+              <div className="rounded-lg border border-cro-border bg-cro-dark/60 p-2">
+                <div className="text-cro-muted">Liq. price</div>
+                <div className="mt-1 font-mono text-cro-text">{formatPrice(position.liquidationPriceUsd)}</div>
+              </div>
+              <div className="rounded-lg border border-cro-border bg-cro-dark/60 p-2">
+                <div className="text-cro-muted">Distance</div>
+                <div className="mt-1 font-mono text-cro-text">{position.distancePct.toLocaleString(undefined, { maximumFractionDigits: 1 })}%</div>
+              </div>
+              <div className="rounded-lg border border-cro-border bg-cro-dark/60 p-2">
+                <div className="text-cro-muted">Type</div>
+                <div className="mt-1 text-cro-text">{position.riskKind === 'lending-debt' ? 'Debt' : 'Perps notional'}</div>
+              </div>
+            </div>
+          </div>
+        ))}
+        {rows.length === 0 && <div className="px-4 py-8 text-center text-cro-muted">No positions match this filter.</div>}
       </div>
     </div>
   );
@@ -308,14 +385,13 @@ export function LiquidationHeatmap() {
           <SummaryCards data={data} />
           <HeatmapTable data={data} />
           <SourceNotes data={data} />
-          {data.note && <div className="rounded-xl border border-cro-border bg-cro-dark/50 p-4 text-sm text-cro-muted">{data.note}</div>}
           {includeDetails ? (
             <DetailRows positions={sortedPositions} />
           ) : (
             <div className="rounded-xl border border-cro-border bg-cro-card p-5 text-center">
-              <div className="font-semibold text-cro-text">Detail rows are loaded on demand</div>
+              <div className="font-semibold text-cro-text">Wallet-level details are optional</div>
               <p className="mx-auto mt-1 max-w-2xl text-sm text-cro-muted">
-                The default heatmap response only returns summary buckets so public page loads stay cheap. Load detail rows when you want wallet-level drilldown.
+                Start with the summary view, then load wallet-level details when you want to inspect the positions behind a cluster.
               </p>
               <button
                 type="button"

@@ -62,7 +62,7 @@ export default function Home() {
                 </svg>
               </div>
               <div>
-                <h1 className="font-semibold tracking-tight text-cro-text text-sm sm:text-base">Collateral Dashboard</h1>
+                <h1 className="font-semibold tracking-tight text-cro-text text-sm sm:text-base">Crollateral</h1>
                 <p className="text-xs text-cro-muted hidden sm:block">Cronos DeFi risk dashboard</p>
               </div>
             </div>
@@ -81,10 +81,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col items-center gap-3">
             <p className="text-center text-sm text-cro-muted">
-              Built by a degen liquidated one too many times 💀
+              A read-only Cronos risk companion for lending and perps users.
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-2 text-xs text-cro-muted">
-              <span>Help keep this app running:</span>
+              <span>Support Crollateral:</span>
               <button
                 onClick={handleCopy}
                 className="group flex items-center gap-2 px-3 py-1.5 bg-cro-card border border-cro-border rounded-lg hover:border-cro-cyan/50 hover:bg-cro-cyan/5 transition-all cursor-pointer"
@@ -108,13 +108,16 @@ export default function Home() {
             {/* Disclaimer */}
             <p className="text-center text-xs text-cro-muted max-w-2xl leading-relaxed">
               Crollateral is an independent, community-built tool. Not affiliated with Tectonic Finance, Fulcrom Finance, Moonlander, or Crypto.com.
-              Prices are approximate and may be delayed — always verify your positions directly on the source platform before making
-              any decisions. This tool is read-only and never submits transactions or requests wallet signing.
+              Market data and calculations are estimates — always verify directly on the source platform before making
+              decisions. Crollateral is read-only and never submits transactions or requests wallet signing.
             </p>
             <strong className="text-xs text-cro-muted">Not financial advice. Use at your own risk.</strong>
             <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs">
               <a href="/terms" className="text-cro-cyan hover:underline">
                 Terms of Use
+              </a>
+              <a href="/privacy" className="text-cro-cyan hover:underline">
+                Privacy
               </a>
               <a
                 href="https://tectonic.gitbook.io/docs"
@@ -131,6 +134,14 @@ export default function Home() {
                 className="text-cro-cyan hover:underline"
               >
                 Fulcrom Whitepaper
+              </a>
+              <a
+                href="https://docs.moonlander.trade"
+                target="_blank"
+                rel="noreferrer"
+                className="text-cro-cyan hover:underline"
+              >
+                Moonlander Whitepaper
               </a>
             </div>
           </div>
